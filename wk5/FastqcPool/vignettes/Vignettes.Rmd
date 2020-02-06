@@ -1,0 +1,13 @@
+---
+title: "Homework Week 6 J.QI"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Homework answers checklist}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+

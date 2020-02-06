@@ -19,15 +19,29 @@ do
 done
 
 ```{r}
-filename <- "ERR458499_fastqc.zip.txt"
-filelist <- c("ERR458498_fastqc.zip.txt", "ERR458499_fastqc.zip.txt")
+filename <- "fastqc_data.txt.zip"
+#unzip(filename, list = T)
+filelist <- c("fastqc_data.txt.zip", "fastqc_data2.txt.zip", "fastqc_data.txt.zip", "fastqc_data2.txt.zip")
+
+rename <- c("WT_1_ERR458493", "WT_2_ERR458493", "FT_1_ERR458493", "FT_2_ERR458493")
+
 tem <- read.delim(filename, header = T, sep = "\t", check.names = F)
 out <- tem[complete.cases(tem),  ]
+syscommand <- paste0("sed -n '/", test, "/,/END_MODULE/p' ", file, " | grep -v '^>>'")
+syscommand <- paste0("unzip -p ", filename, " fastqc_data.txt", " | sed -n -e '13,/>>END_MODULE/p' | grep -v '>>'")
+data.table::fread(cmd=syscommand, header = T)
+read_one <- function(filepath, test = "Per base sequence quality", rename = filepath){
+  syscommand <- paste0("unzip -p ", filepath, " fastqc_data.txt | sed -n -e '/", test, "/,/>>END_MODULE/p' | grep -v '>>'")
+  out <- data.table::fread( cmd = syscommand, header = TRUE) %>% as.data.frame
+  sample_id <- rep(rename, nrow(out))
+  out <- cbind.data.frame(sample_id, out)
+  return(out)
+}
 
-read_one <- function(filename, rename = filename, header = T, sep = "\t", check.names = F, ...){
-  out <- match.call(read.delim, call("read.delim", file = filename))
+read_one <- function(filename, rename = filename){
+  syscommand <- paste0("unzip -p ", filename, " fastqc_data.txt")
+  out <- data.table::fread(cmd = syscommand, header = T)
     #read.delim(filename, header = T, sep = "\t", check.names = F)
-  out <- tem[complete.cases(tem),  ]
   sample_id <- rep(rename, nrow(out))
   out <- cbind.data.frame(sample_id, out)
   return(out)
@@ -54,20 +68,46 @@ read_in <- function(input, rename=input, ...){
 }
 read_one(filename)
 read_in(filename)
-df <- read_in(filelist, rename = c("ERR458498", "ERR458499"))
+df[, -"sample_id"]
+df <- read_in(filelist, rename = rename)
 read_in(filelist, rename = c("ERR458498"))
 read_in(filelist, rename = c("ERR458498", "ERR458498"))
 ```
 
 ```{r}
-df %>%
-  ggplot(aes(as.numeric(`#Base`), Mean, color = sample_id))+
+rename.df <- data.frame(rename)
+idx_gen <- function(dataframe, sep = "_", col.names = c("Sample", "Biorep", "Techrep")){
+  key.df <- separate(dataframe[, "sample_id"], sample_id, into = col.names, sep = sep)
+  if(sum(complete.cases(key.df)) != nrow(dataframe)){
+    stop("check error in rename vector")
+  }
+  else{
+    return(cbind.data.frame(key.df, dataframe[, -"sample_id"]))
+  }
+}
+separate(rename.df, rename, into = col.names, sep = sep)%>%complete.cases()
+df <- idx_gen(df)
+
+plotpool_error <- function(dataframe, col = NULL, panel = NULL){
+  dataframe %>%
+  ggplot(aes(as.numeric(`#Base`), Mean, color = get(col, pos = -1)))+
   geom_point(position = "jitter")+
   geom_errorbar(aes(ymin = `Lower Quartile`, ymax = `Upper Quartile`),position = "jitter")+
   scale_x_continuous()+
   scale_y_continuous(labels = scales::percent)+
   theme(plot.title = element_text(hjust = 0.5))+
   labs(x = "# Base", title = "Per Base Sequence Quality Errorbar Plot")+
-  guides(color = guide_legend(title="Sample ID"))
+  guides(color = guide_legend(title="Sample ID")) -> p
+  
+  if(is.null(panel)){
+   return(p)
+}
+  else{
+   p+facet_wrap(.~get(panel)) 
+  }
+}
+
+plotpool_error(df, col = "Biorep", panel = "Sample")
+
 ```
 

@@ -1,0 +1,9 @@
+Read_in                 Extract the base quality score from
+                        "fastqc_data.txt" in one or a list of standard
+                        FastQC output zip files to a combined R
+                        dataframe
+Read_one                Extract the base quality score from
+                        "fastqc_data.txt" in a standard FastQC output
+                        zip output to a R dataframe
+plotpool_error          Plot error bar plot of the Per base Quality
+                        Score in ggplot with color and size coding.
