@@ -24,7 +24,7 @@ Read_one(filepath, test, rename)
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+excute unzip -p ERR458493_fastqc.zip \*/fastqc_data.txt | sed -n -e "13,/>>END_MODULE/p" | grep -v '>>' with fread(cmd = syscommand)
 }
 \value{
   a dataframe with the value of a single FastQC test result
