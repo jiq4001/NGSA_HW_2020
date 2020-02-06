@@ -1,0 +1,106 @@
+---
+title: "Wk2_HW"
+author: "JingjingQi"
+date: "1/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Relevance of DNA sequencing (7pts total)  
+
+### 1.Why are we actually interested in the order of the DNA’s base pairs? Give an example application of DNA sequencing and its aim/relevance. 3pts  
+    
+    DNA base pairs are the blueprint of most of the life forms. Studing DNA pairs helps determin genes, entire genomes, or indirectly sequence RNA/proteins.  
+    The application could be in personalized medicine, identifing gene signature/mutation that associates/causes disease or increased disease prevalence.  
+
+### 2.Explain two differences between the traditional Sanger and next-generation-sequencing. 2pts  
+
+Sanger   |   NGS   
+--------------|--------------
+single DNA fragment | massive fragments  
+high accuracy | (0.1–15%) error rate  
+
+### 3.Find a publication that uses RNA-seq data (tell us how you found it, too). Identify the main question that is being addressed with the RNA-seq data in that paper. (2pts)  
+
+Searched keyword "RNA-seq", "PD-1"  
+PAK4 as a cancer immune-evasion target, *Thomas F. Gajewsk, Jessica Fessler* Nature Cancer volume 1, pages18–19(2020)  
+
+Lack of pre-existing immune cell in tumer environment is the primary mechanism of resistance to PD-1 blockade therapy.----Previous studies had shown that WNT signaling pathways may actively exclude T cells from tumor environment.----To understand and identify actionable WNT-related targets that can be exploited to reverse T cell exclusion and overcome primary resistance to PD-1 blockade therapy.  
+
+RNA-seq was done on a total of 27 baseline and 33 on-treatment tumor biopsies, including 14 non-responding and 13 responding samples from patients with anti-PD-1 immunotherapy.  
+
+Result: PAK4 expression is enriched in non-responding tumor biopsies with low immune cell infiltration.  
+
+### Exercises (7 pts total)  
+
+### 1.Make a folder in which you’re going to keep track of everything related to your homework for the ANGSD class. (UNIX) 1pt  
+
+```{}
+[jiq4001@curie ~]$ mkdir angsd  
+```
+
+### 2.Download the files containing the lengths of the individual yeast (S. cerevisiae) chromosomes for every genome assembly that is available at the UCSC Browser (hint: these should be very small text files ending with “chrom.sizes”; you can find them via the links to “Genome Sequence Files” once you’ve tracked down the site for the yeast genomes). (UNIX) 2pts  
+
+```{}
+[jiq4001@curie hw_wk2]$ wget http://hgdownload.soe.ucsc.edu/goldenPath/sacCer1/bigZips/sacCer1.chrom.sizes
+[jiq4001@curie hw_wk2]$ wget http://hgdownload.soe.ucsc.edu/goldenPath/sacCer1/bigZips/sacCer2.chrom.sizes
+[jiq4001@curie hw_wk2]$ wget http://hgdownload.soe.ucsc.edu/goldenPath/sacCer1/bigZips/sacCer3.chrom.sizes
+```
+
+### 3.Compare the files of the different assemblies. What do you notice? (UNIX, common sense) 3pts  
+
+3 releases on 2003, 2008, 2011 accordingly. counts of each chrosome either remain the same or increase in the newer versions, since small bits of sequence could still be added and corrections could be made.  
+
+```{}
+# rename rownames to be consistant with sacCer2 and sacCer3
+[jiq4001@curie hw_wk2]$ nano sacCer1.chrom.sizes  
+
+# count rows of each file
+[jiq4001@curie hw_wk2]$ wc sacCer1.chrom.sizes -l
+[jiq4001@curie hw_wk2]$ wc sacCer2.chrom.sizes -l  # extra row 2micron
+[jiq4001@curie hw_wk2]$ wc sacCer3.chrom.sizes -l
+
+# sort files 
+[jiq4001@curie hw_wk2]$ cat sacCer1.chrom.sizes | sort > sacCer1
+[jiq4001@curie hw_wk2]$ cat sacCer2.chrom.sizes | sort > sacCer2
+[jiq4001@curie hw_wk2]$ cat sacCer3.chrom.sizes | sort > sacCer3
+
+
+[jiq4001@curie hw_wk2]$ join sacCer1 sacCer2 -a2 | cat > merged
+[jiq4001@curie hw_wk2]$ join merged sacCer3 -a1 | cat > merged_all
+
+[jiq4001@curie hw_wk2]$ cat merged_all
+```
+
+
+### 4.Make a table listing the sizes for every chromosome across the 3 different assemblies. (Rmarkdown) 1pt 
+
+chr | sacCer1  |sacCer2 |sacCer3  |
+-------|---------|---------  |---------|
+2micron |       | 6318 |       |
+chrI | 230208 | 230208 | 230218 |
+chrII | 813136 | 813178 | 813184 |
+chrIII | 316613 | 316617 | 316620 |
+chrIV | 1531914 | 1531919 | 1531933 |
+chrIX | 439885 | 439885 | 439888 |
+chrM | 85779 | 85779 | 85779 |
+chrV | 576869 | 576869 | 576874 |
+chrVI | 270148 | 270148 | 270161 |
+chrVII | 1090944 | 1090947 | 1090940 |
+chrVIII | 562639 | 562643 | 562643 |
+chrX | 745446 | 745742 | 745751 |
+chrXI | 666445 | 666454 | 666816 |
+chrXII | 1078173 | 1078175 | 1078177 |
+chrXIII | 924430 | 924429 | 924431 |
+chrXIV | 784328 | 784333 | 784333 |
+chrXV | 1091285 | 1091289 | 1091291 |
+chrXVI | 948060 | 948062 | 948066 |
+
+Make sure to document every step of your analysis that is relevant to the final results you’re presenting (including trivial steps such as checking the content of a file). It’s fine to also note if you manually copied and pasted entries, but we (and your future self) want to know exactly how you obtained every piece of information and how any visualizations or summaries were achieved.
+
+Compile the .Rmd file and send both the .Rmd and the HTML files to angsd_wmc@zohomail.com by Saturday night.
+
+

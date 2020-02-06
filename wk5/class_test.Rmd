@@ -1,0 +1,73 @@
+---
+title: "Untitled"
+author: "JingjingQi"
+date: "2/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+library(ggplot2)
+```
+
+unzip -p ERR458493_fastqc.zip \*/fastqc_data.txt | sed -n -e "13,/>>END_MODULE/p" > 
+
+for zipfile in $(ls | egrep ".*.zip")
+do
+ unzip -p ERR458493_fastqc.zip \*/fastqc_data.txt | sed -n -e "13,/>>END_MODULE/p" > "$zipfile".txt
+done
+
+```{r}
+filename <- "ERR458499_fastqc.zip.txt"
+filelist <- c("ERR458498_fastqc.zip.txt", "ERR458499_fastqc.zip.txt")
+tem <- read.delim(filename, header = T, sep = "\t", check.names = F)
+out <- tem[complete.cases(tem),  ]
+
+read_one <- function(filename, rename = filename, header = T, sep = "\t", check.names = F, ...){
+  out <- match.call(read.delim, call("read.delim", file = filename))
+    #read.delim(filename, header = T, sep = "\t", check.names = F)
+  out <- tem[complete.cases(tem),  ]
+  sample_id <- rep(rename, nrow(out))
+  out <- cbind.data.frame(sample_id, out)
+  return(out)
+}
+
+read_in <- function(input, rename=input, ...){
+  if (length(input) != length(rename)){
+    stop("rename is required to have same length as input\n")
+  }
+  else if (length(unique(rename)) < length(rename)){
+    warning("name list is not unique, check input or rename\n")
+  }
+  else{
+      if(length(input) > 1){
+      frame.list <- mapply(function(x,y) match.call(read_one, call("read_one", filename = x, rename = y)), input, rename, USE.NAMES = F)
+      out <- do.call(rbind.data.frame, frame.list)
+  }
+      else {
+      out <- match.call(read_one, call("read_one", filename=input, rename=rename))
+        read_one(input, ...)
+  }
+  return(out)
+  }
+}
+read_one(filename)
+read_in(filename)
+df <- read_in(filelist, rename = c("ERR458498", "ERR458499"))
+read_in(filelist, rename = c("ERR458498"))
+read_in(filelist, rename = c("ERR458498", "ERR458498"))
+```
+
+```{r}
+df %>%
+  ggplot(aes(as.numeric(`#Base`), Mean, color = sample_id))+
+  geom_point(position = "jitter")+
+  geom_errorbar(aes(ymin = `Lower Quartile`, ymax = `Upper Quartile`),position = "jitter")+
+  scale_x_continuous()+
+  scale_y_continuous(labels = scales::percent)+
+  theme(plot.title = element_text(hjust = 0.5))+
+  labs(x = "# Base", title = "Per Base Sequence Quality Errorbar Plot")+
+  guides(color = guide_legend(title="Sample ID"))
+```
+

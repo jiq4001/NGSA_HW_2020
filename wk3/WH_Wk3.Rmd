@@ -1,0 +1,113 @@
+---
+title: "HW_Wk3"
+author: "JingjingQi"
+date: "1/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Questions  
+
+### 1. A somatic human cell contains about 6 picograms of DNA. How much DNA does a sperm cell contain? (1pt)  
+
+sperm has half the DNA as normal cells, therefore 3 picograms.  
+
+### 2. How many human cells will you need to obtain 10 micrograms of DNA, as is requested by many sequencing protocols? (1pt)  
+
+```{r}
+ceiling(10 * 10^6 / 2^4 / 6) 
+
+ceiling(10 * 10^6 / 2^10 / 6) 
+```
+Illumina protocols usually recommend a minumn of 4 PCR cycles to maximum 10 PCR cycles for the final library enrichment, assume we target for 10 micrograms of DNA for somatic human cell library preparation using 8-12 PCR cycles: will need 104167-1628 cells at least respectively.   
+
+### 3. Describe one typical cause for DNA loss during DNA extraction (1pt).   
+
+DNA extraction could be done using phenol chloroform or column method, but both require initial cell lysis of starting material. incomplete lysis is one of the common causes of DNA lose from starting material.  
+
+### 4. Describe two functions of the adapters that are typically added during Illumina’s library preparations. Which types of sequences do they often entail? (2pts)  
+
+1. Adapters serve as binding to a flow cell in NGS  
+2. Adapters allow adapter-ligated DNA fragment enrichment in PCR amplification  
+
+### 5. Components of what kind of lab equipment have to be integrated in any type of Illumina sequencer? (1pt)  
+    1. agarose gel  
+    2. _centrifuge_  is used for washing between steps of adding reagents  
+    3. microwave  
+    4. microscope  
+    5. scale  
+
+## Exercises  
+### Similarly to last week, please make sure to document all the steps you take, including making folders etc.  
+
+### 1. Write a for-loop to download all fastq files of WT biological replicate no. 2 of the Gierlinski data set (UNIX). Try to have a solution that’s as generally applicable as possible. (3pts)  
+
+
+Reference Publication: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4754627/  
+Availability and implementation: RNA-seq data have been submitted to ENA archive with project ID PRJEB5348.  
+Webpage of the Project: https://www.ebi.ac.uk/ena/data/view/PRJEB5348  
+
+According to the Discription:  
+The mapping between technical replicates and biological replicates is provided via FigShare *http://dx.doi.org/10.6084/m9.figshare.1416210* with text file url: *wget "https://ndownloader.figshare.com/files/2194841"*   
+The gene read counts are also available on FigShare: https://dx.doi.org/10.6084/m9.figshare.1425503  
+https://dx.doi.org/10.6084/m9.figshare.1425502  
+
+
+### ENA accession number: ERP004763 (feel free to download from another entry point to the SRA)
+### You can download the summary of the sample information, including the URLs for the fastq files, by clicking on the TEXT link on the Project page. You can also use wget to download this file, after you have clicked the link once (the URL needs to be generated for each dataset).  
+### Use the mapping information available at http://dx.doi.org/10.6084/m9.figshare.1416210 to figure out which ENA accession names you need to obtain the samples of WT biological replicate no 2. Use the UNIX commands you know to generate a file with the sample names and then use that list as input to your for-loop.  
+
+```{r, eval=F}
+[jiq4001@buddy scratch]$ cd /athena/angsd/scratch/jiq4001 
+[jiq4001@buddy jiq4001]$ mkdir ./HW_Wk3 # creat folder
+[jiq4001@buddy jiq4001]$ cd ./HW_Wk3
+
+[jiq4001@buddy HW_Wk3]$ wget "https://ndownloader.figshare.com/files/2194841" -O mapping.txt  # mapping file
+[jiq4001@buddy HW_Wk3]$ wc -l mapping.txt # file row count 
+673 mapping.txt
+
+[jiq4001@buddy HW_Wk3]$ wget "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=PRJEB5348&result=read_run&fields=study_accession,sample_accession,experiment_accession,run_accession,tax_id,scientific_name,fastq_ftp,submitted_ftp,sra_ftp&format=tsv&download=true" -O master.tsv #master file with urls
+[jiq4001@buddy HW_Wk3]$ wc -l master.tsv # file row count 
+673 master.tsv
+
+[jiq4001@buddy HW_Wk3]$ egrep "(\s(WT)\s2$)" mapping.txt | sort > WT_2_mapping_sorted  #filter WT rep2 from mapping and sorted 
+[jiq4001@buddy HW_Wk3]$ wc -l WT_2_mapping_sorted
+7 WT_2_mapping_sorted
+
+[jiq4001@buddy HW_Wk3]$ join -1 1 -2 4 WT_2_mapping_sorted <(sort -k4 master.tsv) > WT_2_master_filtered # join with master save to new file
+[jiq4001@buddy HW_Wk3]$ wc -l WT_2_master_filtered
+7 WT_2_master_filtered
+
+[jiq4001@buddy HW_Wk3]$ cut -d" " -f11 WT_2_master_filtered > download_url # extract field with url
+[jiq4001@buddy HW_Wk3]$ mkdir ./WT_2_files
+[jiq4001@buddy WT_2_files]$ for dw_url in $(cut ../download_url -f1); do wget ${dw_url}; done # download fastq.gz to folder
+
+```
+
+### 2. Why are there multiple fastq files per sample? What does each file represent? (1pt)  
+
+multiple biological replica(Biorep) and technical replica(Lane)  
+
+### 3. Count the number of reads stored in each FASTQ file and keep a note of the results (UNIX). The zcat command allows you to see the contents of a gzipped file. (2pts)  
+
+```{r, eval=F}
+[jiq4001@buddy HW_Wk3]$ for file in $(ls ./WT_2_files); do  echo $(zcat ./WT_2_files/${file} | wc -l)/4|bc >> ./count_reads.txt; done 
+
+[jiq4001@buddy HW_Wk3]$ paste download_url count_reads.txt 
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458878/ERR458878.fastq.gz	1467569
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458879/ERR458879.fastq.gz	1450012
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458880/ERR458880.fastq.gz	1441569
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458881/ERR458881.fastq.gz	1321748
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458882/ERR458882.fastq.gz	1131784
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458883/ERR458883.fastq.gz	1140688
+ftp.sra.ebi.ac.uk/vol1/fastq/ERR458/ERR458884/ERR458884.fastq.gz	1461646
+
+```
+
+## Project  
+### 1. Identify and write down one or two biological or technical questions of interest for your project. (1pt)  
+
+Comparing the impact of different sequencing depths on numbers of peaks identified in ATAC-seq.  
