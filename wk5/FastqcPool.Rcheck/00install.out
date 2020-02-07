@@ -1,10 +1,15 @@
 * installing *source* package ‘FastqcPool’ ...
 ** using staged installation
 ** R
+** data
+*** moving datasets to lazyload DB
+** inst
 ** byte-compile and prepare package for lazy loading
 ** help
+Warning: /Users/j/Desktop/ANGS/HW/NGSA_HW/wk5/FastqcPool.Rcheck/00_pkg_src/FastqcPool/man/combined_df.RData.Rd: docType ‘Rdata.rdx’ is unrecognized
 *** installing help indices
 ** building package indices
+** installing vignettes
 ** testing if installed package can be loaded from temporary location
 ** testing if installed package can be loaded from final location
 ** testing if installed package keeps a record of temporary installation path

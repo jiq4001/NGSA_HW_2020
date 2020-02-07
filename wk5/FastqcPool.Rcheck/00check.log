@@ -1,4 +1,4 @@
-* using log directory ‘/Users/qij/Documents/GitHub/NGSA_HW_2020/wk5/FastqcPool.Rcheck’
+* using log directory ‘/Users/j/Desktop/ANGS/HW/NGSA_HW/wk5/FastqcPool.Rcheck’
 * using R version 3.6.0 (2019-04-26)
 * using platform: x86_64-apple-darwin15.6.0 (64-bit)
 * using session charset: UTF-8
@@ -15,10 +15,14 @@
 * checking for hidden files and directories ... OK
 * checking for portable file names ... OK
 * checking for sufficient/correct file permissions ... OK
-* checking whether package ‘FastqcPool’ can be installed ... OK
+* checking whether package ‘FastqcPool’ can be installed ... WARNING
+Found the following significant warnings:
+  Warning: /Users/j/Desktop/ANGS/HW/NGSA_HW/wk5/FastqcPool.Rcheck/00_pkg_src/FastqcPool/man/combined_df.RData.Rd: docType ‘Rdata.rdx’ is unrecognized
+See ‘/Users/j/Desktop/ANGS/HW/NGSA_HW/wk5/FastqcPool.Rcheck/00install.out’ for details.
 * checking installed package size ... OK
 * checking package directory ... OK
 * checking for future file timestamps ... OK
+* checking ‘build’ directory ... OK
 * checking DESCRIPTION meta-information ... OK
 * checking top-level files ... OK
 * checking for left-over files ... OK
@@ -33,27 +37,31 @@
 * checking whether the namespace can be unloaded cleanly ... OK
 * checking dependencies in R code ... WARNING
 '::' or ':::' imports not declared from:
-  ‘data.table’ ‘scales’
+  ‘data.table’ ‘scales’ ‘tidyr’
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
 * checking foreign function calls ... OK
 * checking R code for possible problems ... NOTE
+idx_gen: no visible binding for global variable ‘sample_id’
 plotpool_error: no visible binding for global variable ‘#Base’
 plotpool_error: no visible binding for global variable ‘Mean’
-plotpool_error: no visible binding for global variable ‘sample_id’
 plotpool_error: no visible binding for global variable ‘Lower Quartile’
 plotpool_error: no visible binding for global variable ‘Upper Quartile’
 Undefined global functions or variables:
   #Base Lower Quartile Mean Upper Quartile sample_id
-* checking Rd files ... NOTE
-prepare_Rd: Read_one.Rd:26-28: Dropping empty section \details
-prepare_Rd: plotpool_error.Rd:19-21: Dropping empty section \details
+* checking Rd files ... WARNING
+prepare_Rd: Read_in.Rd:25-27: Dropping empty section \details
+prepare_Rd: combined_df.RData.Rd: docType ‘Rdata.rdx’ is unrecognized
+prepare_Rd: idx_gen.Rd:31-33: Dropping empty section \references
+prepare_Rd: plotpool_error.Rd:25-27: Dropping empty section \details
 * checking Rd metadata ... OK
 * checking Rd line widths ... OK
 * checking Rd cross-references ... OK
 * checking for missing documentation entries ... WARNING
 Undocumented code objects:
-  ‘read_in’ ‘read_one’
+  ‘combined_df’ ‘read_in’ ‘read_one’
+Undocumented data sets:
+  ‘combined_df’
 All user-level objects in a package should have documentation entries.
 See chapter ‘Writing R documentation files’ in the ‘Writing R
 Extensions’ manual.
@@ -61,20 +69,20 @@ Extensions’ manual.
 Functions or methods with usage in documentation object 'Read_one' but not in code:
   ‘Read_one’
 
-Codoc mismatches from documentation object 'plotpool_error':
-plotpool_error
-  Code: function(dataframe)
-  Docs: function(df)
-  Argument names in code not in docs:
-    dataframe
-  Argument names in docs not in code:
-    df
-  Mismatches in argument names:
-    Position: 1 Code: dataframe Docs: df
+Functions or methods with usage in documentation object 'extdata' but not in code:
+  ‘system.file’
+
+Data with usage in documentation object 'combined_df.RData' but not in code:
+  ‘combined_df.RData’
 
 * checking Rd \usage sections ... WARNING
 Objects in \usage without \alias in documentation object 'Read_in':
   ‘read_in’
+
+Undocumented arguments in documentation object 'extdata'
+  ‘extdata’ ‘package’
+Objects in \usage without \alias in documentation object 'extdata':
+  ‘system.file’
 
 Functions with \usage entries need to have the appropriate \alias
 entries, and all their arguments documented.
@@ -83,21 +91,14 @@ See chapter ‘Writing R documentation files’ in the ‘Writing R
 Extensions’ manual.
 * checking Rd contents ... OK
 * checking for unstated dependencies in examples ... OK
-* checking examples ... ERROR
-Running examples in ‘FastqcPool-Ex.R’ failed
-The error most likely occurred in:
-
-> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
-> ### Name: Read_in
-> ### Title: Extract the base quality score from "fastqc_data.txt" in one or
-> ###   a list of standard FastQC output zip files to a combined R dataframe
-> ### Aliases: Read_in
-> 
-> ### ** Examples
-> 
-> res <- read_in(filepath = c("fastqc1.zip", "fastqc2.zip"))
-Error in read_in(filepath = c("fastqc1.zip", "fastqc2.zip")) : 
-  unused argument (filepath = c("fastqc1.zip", "fastqc2.zip"))
-Execution halted
+* checking contents of ‘data’ directory ... OK
+* checking data for non-ASCII characters ... OK
+* checking data for ASCII and uncompressed saves ... OK
+* checking installed files from ‘inst/doc’ ... OK
+* checking files in ‘vignettes’ ... OK
+* checking examples ... OK
+* checking for unstated dependencies in vignettes ... OK
+* checking package vignettes in ‘inst/doc’ ... OK
+* checking re-building of vignette outputs ... OK
 * DONE
-Status: 1 ERROR, 4 WARNINGs, 2 NOTEs
+Status: 6 WARNINGs, 1 NOTE

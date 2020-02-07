@@ -31,7 +31,15 @@ base::assign(".ptime", proc.time(), pos = "CheckExEnv")
 
 ### ** Examples
 
-res <- read_in(filepath = c("fastqc1.zip", "fastqc2.zip"))
+## Not run: 
+##D input.file.list <- c("ERR458502_fastqc.zip", "ERR458500_fastqc.zip",
+##D                      "ERR458493_fastqc.zip", "ERR458495_fastqc.zip")
+##D input.file.list <- system.file("extdata", input.file.list, package = "FastqcPool", mustWork = TRUE)
+##D rename.list <- c("SNF2_1_ERR458502", "SNF2_1_ERR458500", "WT_1_ERR458493", "WT_1_ERR458495")
+##D 
+##D df <- read_in(input = input.file.list, rename = rename.list)
+## End(Not run)
+
 
 
 
@@ -51,12 +59,79 @@ base::assign(".ptime", proc.time(), pos = "CheckExEnv")
 
 ### ** Examples
 
-res <- read_one(filepath = "ERR458498_fastqc.zip")
+## Not run: 
+##D res <- read_one(filepath)
+## End(Not run)
 
 
 
 base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
 base::cat("Read_one", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+cleanEx()
+nameEx("combined_df.RData")
+### * combined_df.RData
+
+flush(stderr()); flush(stdout())
+
+base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+### Name: combined_df.RData
+### Title: The combined data.frame from the output of Read_in()
+### Aliases: combined_df.RData
+### Keywords: combined_df.RData
+
+### ** Examples
+
+## Not run: 
+##D data(combined_df.RData)
+## End(Not run)
+
+
+
+base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+base::cat("combined_df.RData", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+cleanEx()
+nameEx("extdata")
+### * extdata
+
+flush(stderr()); flush(stdout())
+
+base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+### Name: extdata
+### Title: Directory of Raw Fastqc.zip files from fastqc output in linux
+###   command
+### Aliases: extdata
+
+### ** Examples
+
+## Not run: 
+##D system.file("extdata", package = "FastqcPool")
+## End(Not run)
+
+
+
+base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+base::cat("extdata", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+cleanEx()
+nameEx("idx_gen")
+### * idx_gen
+
+flush(stderr()); flush(stdout())
+
+base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+### Name: idx_gen
+### Title: Expand key columns from user specified sample_id input
+### Aliases: idx_gen
+
+### ** Examples
+
+## Not run: 
+##D idx_gen(combined_df, sep = "_", col.names = c("Sample", "Biorep", "Techrep"))
+## End(Not run)
+
+
+
+base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+base::cat("idx_gen", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
 cleanEx()
 nameEx("plotpool_error")
 ### * plotpool_error
@@ -71,7 +146,10 @@ base::assign(".ptime", proc.time(), pos = "CheckExEnv")
 
 ### ** Examples
 
-plot(dataframe)
+## Not run: 
+##D plot(dataframe)
+## End(Not run)
+
 
 
 

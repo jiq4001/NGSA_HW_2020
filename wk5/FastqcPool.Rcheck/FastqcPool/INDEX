@@ -5,5 +5,11 @@ Read_in                 Extract the base quality score from
 Read_one                Extract the base quality score from
                         "fastqc_data.txt" in a standard FastQC output
                         zip output to a R dataframe
+combined_df.RData       The combined data.frame from the output of
+                        Read_in()
+extdata                 Directory of Raw Fastqc.zip files from fastqc
+                        output in linux command
+idx_gen                 Expand key columns from user specified
+                        sample_id input
 plotpool_error          Plot error bar plot of the Per base Quality
                         Score in ggplot with color and size coding.

@@ -8,12 +8,18 @@ Plot error bar plot of the Per base Quality Score in ggplot with color and size 
 This function plot error bar plot of the Per base Quality Score in ggplot with color and size coding.
 }
 \usage{
-plotpool_error(df)
+plotpool_error(dataframe, col, panel)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{df}{
-datafame from the read_in() or read_one() output
+  \item{dataframe}{
+datafame from the read_in() or read_one() output, optional with index column expanded with idx_gen()
+}
+  \item{col}{
+graph option: colored by levels of index column, default(col = NULL)
+}
+  \item{panel}{
+graph option: faced option by levels of index column, default(panel = NULL)
 }
 }
 \details{
@@ -23,5 +29,8 @@ datafame from the read_in() or read_one() output
 graph of error plot
 }
 \examples{
+\dontrun{
 plot(dataframe)
+}
+
 }

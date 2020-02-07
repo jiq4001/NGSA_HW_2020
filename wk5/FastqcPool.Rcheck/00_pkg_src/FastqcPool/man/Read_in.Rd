@@ -22,11 +22,21 @@ Other options are: for example, "Per tile sequence quality", "Per sequence quali
 a string that offers the option to rename the SampleID, which presents as the key column in the output dataframe. (defalt is same as the filepath input)
 }
 }
-
+\details{
+%%  ~~ If necessary, more details than the description above ~~
+}
 \value{
 a dataframe with the value of a single FastQC test result
 }
 
 \examples{
-res <- read_in(filepath = c("fastqc1.zip", "fastqc2.zip"))
+\dontrun{
+input.file.list <- c("ERR458502_fastqc.zip", "ERR458500_fastqc.zip",
+                     "ERR458493_fastqc.zip", "ERR458495_fastqc.zip")
+input.file.list <- system.file("extdata", input.file.list, package = "FastqcPool", mustWork = TRUE)
+rename.list <- c("SNF2_1_ERR458502", "SNF2_1_ERR458500", "WT_1_ERR458493", "WT_1_ERR458495")
+
+df <- read_in(input = input.file.list, rename = rename.list)
+}
+
 }

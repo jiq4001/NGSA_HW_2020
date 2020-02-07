@@ -11,8 +11,10 @@ Description:
     Plot error bar plot of the Per base Quality Score in ggplot with color and size coding.   
 Depends: R (>= 3.5.0)
 Imports: magrittr, ggplot2
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
-Packaged: 2020-02-06 18:08:13 UTC; qij
+Packaged: 2020-02-07 04:00:04 UTC; j

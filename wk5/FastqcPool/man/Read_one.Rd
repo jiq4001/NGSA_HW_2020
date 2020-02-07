@@ -24,13 +24,15 @@ Read_one(filepath, test, rename)
 }
 }
 \details{
-excute unzip -p ERR458493_fastqc.zip \*/fastqc_data.txt | sed -n -e "13,/>>END_MODULE/p" | grep -v '>>' with fread(cmd = syscommand)
+excute linux command: unzip -p ERR458493_fastqc.zip \*/fastqc_data.txt | sed -n -e "13,/>>END_MODULE/p" | grep -v '>>' with fread(cmd = syscommand)
 }
 \value{
   a dataframe with the value of a single FastQC test result
 }
 
 \examples{
-res <- read_one(filepath = "ERR458498_fastqc.zip")
+\dontrun{
+res <- read_one(filepath)
+}
 }
 
