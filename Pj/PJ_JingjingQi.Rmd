@@ -1,0 +1,20 @@
+---
+title: "PJ_ANGSD"
+author: "JingjingQi"
+date: "2/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+meta <- read.delim("SraRunTable.txt", sep = ",", header = T)
+srr_acc <- read.delim("SRR_Acc_List.txt", header = F)
+drop_repinfo <- meta[apply(meta, 2, function(x) length(unique(x)) != 1)]
+drop_repinfo %>%
+  filter(rna_preparation != "Illumina PolyA")
+```
+
