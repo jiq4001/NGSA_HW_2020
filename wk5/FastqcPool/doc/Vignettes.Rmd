@@ -1,0 +1,53 @@
+---
+title: "Homework Week 6 J.QI"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Homework answers checklist}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Exercises (14 pts)
+###The goal is to create a package that contains:
+
+    1.a customized DESCRIPTION file  
+    2.at least one function  
+    3.an Robject that can be loaded just like any function  
+    4.documentation for both functions and the Robject  
+    5.a vignette demonstrating the use of the functions and data (= the solutions to some of the exercises below)
+
+The package should be installable via install.packages().  
+
+Exercises that involve the reading in of data and plotting should become part of the vignette (which is really just a good old Rmarkdown document where you keep track of example analyses you’ve done with the functions in a given package).  
+
+Feel free to add any other functions you might come up with along the exercises to your package.  
+
+
+    Each FastQC run should have produced such a file (usually stored in the zipped output folder) – it’s fine to download these files to your computer.
+The command would go into the Rmd document that will become your vignette.  
+
+###Explain the logic of the function’s sed command (1pt)  
+
+unzip -p ERR458493_fastqc.zip \*/fastqc_data.txt | sed -n -e "13,/>>END_MODULE/p" | grep -v '>>'  
+
+sed is a stream editor that makes one pass to the input that offers the capability to filter text in a pipeline.  
+here sed reads out txt file from zip archive, putting it to input without phically unzip--- -e specifies the start and end pattern to recognize -n lines to print out  
+
+
+Now go back to the function’s code and add a variable to the function that adds an additional column to the resulting data frame containing a user-specified sample name (e.g. “WT_1_ERR458493”). I.e., the function should get at least one more argument. (2pts)
+
+
+Combine all these data.frames into one (check out  rbind(); if you've generated a list in the previous exercise, also look into thedo.call()function). Save that composite data frame as an.rdaobject (with thesave()function) giving it the same name as the name of the Robject (e.g.combined_df.rda`). (1pt)
+The goal is to include that combined data frame as a data object with your package.
+Figure out where to store the .rda file within the package infrastructure. (0.5pt)
+Document your object following the examples here. Where do you keep the documentation of the data file? (1pt)
+How do you build your package? (1pt)
+You can include the answer to this in the vignette, too, for the sake of the homework answers all being kept in one place. Make sure to set the code chunk option eval=FALSE though (why?).
+Make a ggplot2-based plot using the combined data frame. Try to mimick the basic features of the example plot below, but feel free to change the color palette, remove the grey background and other details. (2pts)
+This should be part of the vignette, too.
+You will probably have to add a couple of columns to your original combined data frame
+You will get a bonus point if you (i) install the package (instead of loading it via devtools) and (ii) use the data stored in the package to make the plot
