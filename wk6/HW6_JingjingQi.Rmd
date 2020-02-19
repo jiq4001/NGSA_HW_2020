@@ -16,34 +16,36 @@ knitr::opts_chunk$set(echo = TRUE)
 Remember those three checks after read alignment:  
 Is it a BAM file?   STAR: BAM file by default,  BWA: requires convert  
 Is it sorted?  STAR: commond option to sort by coordinate, BWA: requires SAMTOOLS to sort by coordinate  
-Is it indexed?  STAR: indexed,   BWA: requires SAMTOOLS to index  
+Is it indexed? requires SAMTOOLS to index  
+
 ```{eavl = F}
 spack load star@2.7.0e
 spack load samtools@1.9%gcc@6.3.0
 spack load bwa@0.7.15%gcc@6.3.0
 
-wget "http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/bigZips/sacCer3.2bit"
-wget "http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa"
-[jiq4001@node003 sacCer3.fa]$../twoBitToFa sacCer3.2bit sacCer3.fa    ## convert 2bit file to Fasta file
+$ wget "http://hgdownload.soe.ucsc.edu/goldenPath/sacCer3/bigZips/sacCer3.2bit"
+$ wget "http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa"
+$ ../twoBitToFa sacCer3.2bit sacCer3.fa    ## convert 2bit file to Fasta file
 
-
-STAR --runMode genomeGenerate \
+#### build index
+$ STAR --runMode genomeGenerate \
 --runThreadN 4 \
 --genomeDir sacCer3_STARindex \
 --genomeFastaFiles SacCer3.fa/sacCer3.fasta \   # a file or combined file
 --sjdbGTFfile sacCer3.sgd.gtf \
 --sjdbOverhang 50  # refer to fastqc file read length distribution 
 
-```
 
-```{r, eval=F}
 # pooled file from rimed WT biorep1 option -s 10
-[jiq4001@node003 trimed_soft]$ for file in $(ls | egrep ".*.gz")   
+$ for file in $(ls | egrep ".*.gz")   
 > do
 > zcat $file >> WT_biorep1_cmb
 > done
+```
 
-STAR --runMode alignReads \
+```{r, eval=F}
+
+$ STAR --runMode alignReads \
 --runThreadN 12 \
 --genomeDir sacCer3_STARindex \
 --readFilesIn /athena/angsd/scratch/jiq4001/HW_Wk4/WT/biorep1/trimed_soft/WT_biorep1_cmb \
@@ -55,28 +57,84 @@ STAR --runMode alignReads \
 --outSAMtype BAM SortedByCoordinate
 
 
-[jiq4001@node003 Star_align]$ samtools index WT_biorep1_cmb.Aligned.sortedByCoord.out.bam
+$ samtools index WT_biorep1_cmb.Aligned.sortedByCoord.out.bam
 ```
  
 
-
 ```{r, eval=F}
-[jiq4001@node003 HW_Wk6]$ bwa index -p sacCer3_BWAindex/sacCer3 SacCer3.fa/sacCer3.fasta # creat index
-[jiq4001@node003 HW_Wk6]$ bwa mem -t 4 -k 20 sacCer3_BWAindex/sacCer3  /athena/angsd/scratch/jiq4001/HW_Wk4/WT/biorep1/trimed_soft/WT_biorep1_cmb > BWA_align/WT_biorep1_cmb.bwa.sam 
-[jiq4001@node003 HW_Wk6]$ samtools view -b BWA_align/WT_biorep1_cmb.bwa.sam | samtools sort -o BWA_align/WT_biorep1_cmb.bwa.bam
-[jiq4001@node003 HW_Wk6]$ rm WT_biorep1_cmb.bwa.sam
+$ bwa index -p sacCer3_BWAindex/sacCer3 SacCer3.fa/sacCer3.fasta # creat index
+$ bwa mem -t 4 -k 20 sacCer3_BWAindex/sacCer3  /athena/angsd/scratch/jiq4001/HW_Wk4/WT/biorep1/trimed_soft/WT_biorep1_cmb > BWA_align/WT_biorep1_cmb.bwa.sam 
+$ samtools view -b BWA_align/WT_biorep1_cmb.bwa.sam | samtools sort -o BWA_align/WT_biorep1_cmb.bwa.bam
+$ rm WT_biorep1_cmb.bwa.sam
+$ samtools index BWA_align/WT_biorep1_cmb.bwa.bam
+```
 
+In script: 
+```{r, eval=FALSE}
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=tmle
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=80G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error_1
+#SBATCH --out=/athena/angsd/scratch/jiq4001/out_1
+
+spack load star@2.7.0e
+spack load samtools@1.9%gcc@6.3.0
+spack load bwa@0.7.15%gcc@6.3.0
+
+# usage star_bwa_bash <fastq file> <star_dir> <bam_dir>
+#check arguments count
+arg_count=$#
+if [ $arg_count -lt 3]
+ then 
+  echo "not enough argment <fastq_file> <star_dir> <bam_dir>"
+  exist
+fi
+
+fastq_file=$1
+star_dir=$2
+bam_dir=$3
+
+#check if output dir exist
+if [ ! -d Star_align ]
+ then
+  mkdir Star_align
+fi
+
+if [ ! -d BWA_align ]
+ then
+  mkdir BWA_align
+fi
+
+STAR --runMode alignReads \
+--runThreadN 12 \
+--genomeDir ${star_dir} \
+--readFilesIn ${fastq_file} \
+--outFileNamePrefix Star_align/${fastq_file}. \
+--outSAMattributes NH HI AS nM MD \
+--alignIntronMin 30 \
+--alignIntronMax 1000 \ #distribution of yeast intron: http://ribonode.ucsc.edu/Pubs/Spingolaetal99.pdf  
+--twopassMode Basic \  #--outSJfilterOverhangMin default: 30 12 12 12
+--outSAMtype BAM SortedByCoordinate
+samtools index Star_align/${fastq_file}.Aligned.sortedByCoord.out.bam
+
+bwa mem -t 8 ${bam_dir}  ${fastq_file} > BWA_align/temp 
+samtools view -b BWA_align/temp | samtools sort -o BWA_align/${fastq_file}.bwa.bam
+rm temp
+samtools index BWA_align/${fastq_file}.bwa.bam
 ```
 
 
 ###2 Subset the aligned reads to select only those that map to chromosome I. (1pt)  
 ```{r, eval=F}
 
-[jiq4001@node003 Star_align]$ samtools view -h Star_align/WT_biorep1_cmb.Aligned.sortedByCoord.out.bam | egrep "\schrI\s" | wc -l
+$ samtools view -h Star_align/WT_biorep1_cmb.Aligned.sortedByCoord.out.bam | egrep "\schrI\s" | wc -l
 172054
 
 
-[jiq4001@node003 HW_Wk6]$ samtools view -h BWA_align/WT_biorep1_cmb.bwa.bam | egrep "\schrI\s" | wc -l
+$ samtools view -h BWA_align/WT_biorep1_cmb.bwa.bam | egrep "\schrI\s" | wc -l
 160075
 
 ```
@@ -90,31 +148,62 @@ BWA
 ERR458494.778282  272 chrI  139  0  13H38M  *   0   0       
 *   *   NM:i:1  MD:Z:35T2       AS:i:35
 ```
-    ###Which optional SAM fields does STAR add and what do they represent? (1pt)   
+Star_align  
+Number of input reads |	7009665
+Uniquely mapped reads % |	85.73%  
+Average mapped length |	50.42  
+Number of splices: Total |	10688  
+Mismatch rate per base, % |	0.35%  
+% of reads mapped to multiple loci |	10.21%  
+
+
+BWA_align  
+raw total sequences:	7009665  
+reads mapped:	6703899  
+average first fragment length:	51  
+error rate:	4.692696e-03	# mismatches / bases mapped  
+average quality:	36.2  
+
+
+###Which optional SAM fields does STAR add and what do they represent? (1pt)   
     NH: Number of reported alignments that contain the query in the current record  
     HI: Query hit index  
     AS: Alignment score generated by aligner 
     nM: Edit distance to the reference  
-    ###Which optional SAM fields does BWA add and what do they represent? (1pt)  
+###Which optional SAM fields does BWA add and what do they represent? (1pt)  
     NM: Edit distance to the reference 
     MD: String for mismatching positions  
     AS: Alignment score generated by aligner  
     XS: indicate non multiple mapping
 ###4 Run bamqc on your BAM files (Note: this is a tool that’s not available in spack, but you can use it via /softlib/apps/EL7/BamQC/bin/bamqc after logging on to a compute node). You will need to figure out how to run this on your own (hint: /softlib/apps/EL7/BamQC/bin/bamqc --help).  
 ```{r, eval=F}
-[jiq4001@node003 HW_Wk6]$ /softlib/apps/EL7/BamQC/bin/bamqc -v
-[jiq4001@node003 HW_Wk6]$ BamQC v0.1.25_devel
+$ /softlib/apps/EL7/BamQC/bin/bamqc -v
+$ BamQC v0.1.25_devel
 
-[jiq4001@node003 HW_Wk6]$ /softlib/apps/EL7/BamQC/bin/bamqc Star_align/WT_biorep1_cmb.Aligned.sortedByCoord.out.bam -f sacCer3.sgd.gtf -g SacCer3.fa/ -o Star_align/ --extract
+$ /softlib/apps/EL7/BamQC/bin/bamqc Star_align/WT_biorep1_cmb.Aligned.sortedByCoord.out.bam -f sacCer3.sgd.gtf -g SacCer3.fa/ -o Star_align/ --extract
 
-[jiq4001@node003 HW_Wk6]$ /softlib/apps/EL7/BamQC/bin/bamqc BWA_align/WT_biorep1_cmb.bwa.bam -f sacCer3.sgd.gtf -g SacCer3.fa/ -o BWA_align/ --extract
+$ /softlib/apps/EL7/BamQC/bin/bamqc BWA_align/WT_biorep1_cmb.bwa.bam -f sacCer3.sgd.gtf -g SacCer3.fa/ -o BWA_align/ --extract
 
 ```
-    ###Describe 3 differences between the bamqc results for both the BWA and the STAR output files. (3pt)  
-    Percent primary alignments: STAR is lower than BWA  
-    Percent sequences unmapped: STAR is Lower than BWA  
-    Percent sequences spliced: STAR non-zero, BWA 0  
-    STAR is spice-aware aligner, BWA is not, therefore Star showed lower primary alignment, lower unmapped sequence.  
+   
+###Describe 3 differences between the bamqc results for both the BWA and the STAR output files. (3pt)  
+STAR  
+Percent primary alignments	88.689  
+Percent sequences spliced	0.784  
+Percent indels	0.004  
+
+BWA  
+Percent primary alignments	99.998
+Percent sequences unmapped	4.362  
+Percent indels	0.006 (Ins: 0.002; Del: 0.004)  
+Percent SNPs	0.443 
+  
+Percent primary alignments: STAR is lower than BWA  
+Percent sequences unmapped: STAR is Lower than BWA  
+Percent sequences spliced: STAR non-zero, BWA 0  
+Indel and SNP peak show in BWA     
+
+STAR is spice-aware aligner, BWA is not, therefore Star showed lower primary alignment, lower unmapped sequence. and try to finde non matched base with insertion some other locations.  
     
 ###5 Explain the difference between alignment score and mapping quality in SAM/BAM files. How does the interpretation of the mapping quality field differ between STAR and BWA? (2pt)  
 Alignment score quantifies the similarity between read and a reference sequence  
@@ -127,73 +216,76 @@ split read: ead that have two or more alignments to the reference from unique re
 [jiq4001@node003 HW_Wk6]$ samtools view -h Star_align/WT_biorep1_cmb.Aligned.sortedByCoord.out.bam | head -n 100 | egrep ".*([0-9]+N)+.*"
 # N denotes large insert
 ```
+An example output: ERR458495.840632	0	chrI	12654	3	26M48N25M  
+
 only in Star processed file, BWA doesnt recognize splices.  
 
 ###7 How can you remove the unmapped reads from the BWA output? (hint: go back to the notes where FLAG values were explained) (1pt)
 ```{r, eval=FALSE}
 # f output flag, F supress flag    
 # unmapped flag code: 4
-[jiq4001@node003 HW_Wk6]$ samtools view -b -F 4 BWA_align/WT_biorep1_cmb.bwa.bam > BWA_align/WT_biorep1_cmb.bwa_mapped.bam
+$ samtools view -b -F 4 BWA_align/WT_biorep1_cmb.bwa.bam > BWA_align/WT_biorep1_cmb.bwa_mapped.bam
 ```
 
 ##Project work (5 pts)  
 ###If you need a different program than what we have used in the class, you can use spack find to see if the tool is already installed and loadable via spack. If your tool is not there, get in touch with scu@med.cornell.edu to ask them to install it for you.  
 If you have processes that will take a long time, go back to the notes from the first day and try to make use of sbatch.  
-```{r, eval=FALSE}
-spack load -r sra-toolkit@2.8.2-1
-```
 
 ###1 Download at least one FASTQ file that you will be working with for your project. Document the following details: (2pt)  
-    ###where did you get it from?   
+  
+###where did you get it from?   
     https://www.ncbi.nlm.nih.gov/Traces/study/?acc=SRP026013&o=rna_preparation_sam_s%3Aa%3Bacc_s%3Aa&s=SRR900275,SRR900276,SRR900277,SRR900278,SRR900279,SRR900280,SRR900281,SRR900282,SRR900283,SRR900284,SRR900285,SRR900286,SRR900287,SRR900288,SRR900289,SRR900290  
-    ###what publication is it linked to?   
+  
+###what publication is it linked to?   
     https://www.ncbi.nlm.nih.gov//pubmed/23977132   
-    ###who generated the data?  
+###who generated the data?  
     Mayo Clinic College of Medicine  
-    ###how was the NA extracted?  
+###how was the NA extracted?  
     TRIzol kit (Invitrogen)  
-    ###what library prep was used?  
+###what library prep was used?  
     Illumina PolyA, NuGEN Ovation  
-    ###what cell type was used?  
+###what cell type was used?  
     human mammary epithelial cell (HMEC) lines obtained from American Type Culture Collection (ATCC)  
-    ###what was the treatment/experimental condition? 
+###what was the treatment/experimental condition? 
     involuted phenotype associated with an increased breast cancer risk  
-    ###what sequencing platform was used?
+###what sequencing platform was used?
     NuGEN---GAIIx sequencer, and Illumina PolyA---HiSeq 2000 at Mayo Clinical  
 ```{r, eval=FALSE}
 
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1 --cpus-per-task=16
-#SBATCH --job-name=tmle
+#SBATCH --job-name=download
 #SBATCH --time=7-00:00:00
 #SBATCH --mem=80G
 #SBATCH --error=/athena/angsd/scratch/jiq4001/error_1
 #SBATCH --out=/athena/angsd/scratch/jiq4001/out_1
 
-for a in $(cat /athena/angsd/scratch/jiq4001/Pj/Acc_Nugen.txt)
+spack load -r sra-toolkit@2.8.2-1
+
+for a in $(cat /athena/angsd/scratch/jiq4001/Pj/Acc_ilumina.txt)
 do
- fastq-dump $a --outdir /athena/angsd/scratch/jiq4001/Pj/test --gzip
+ fastq-dump --split-files $a  --outdir /athena/angsd/scratch/jiq4001/Pj/test --gzip
 done
 ```
     
 ###2 Align the FASTQ file with an appropriate aligner (you may have to build a new index). Document: (3pt)  
-    parameters (and why you chose them)  
-    summary of outcome and basic QC  
+parameters (and why you chose them)  
+summary of outcome and basic QC  
 ###Record:  
 Genome:  
 http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
 Annotation:  
 http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/  
-hg38.ensGene.gtf.gz       10-Jan-2020 09:33   27M  
+hg38.refGene.gtf.gz        10-Jan-2020 09:33   23M  
 genomeGenerate: --sjdbOverhang 99  
 alignReads: --alignIntronMin 20 --alignIntronMax 1000000 --twopassMode Basic  
 
 ```{r, eval=FALSE}
-[jiq4001@node003 Pj]$ wget "http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit"
-[jiq4001@node003 Pj]$/athena/angsd/scratch/jiq4001/HW_Wk6/twoBitToFa hg38.2bit hg38.fa
+$ wget "http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit"
+$/athena/angsd/scratch/jiq4001/HW_Wk6/twoBitToFa hg38.2bit hg38.fa
 
-[jiq4001@node003 Pj]$ wget "http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.ensGene.gtf.gz"
+$ wget "http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.refGene.gtf.gz "
 
 #!/bin/bash
 #SBATCH --nodes=1
@@ -215,6 +307,10 @@ STAR --runMode genomeGenerate \
 --sjdbOverhang 99 # refered by sample fastqc read length  
 ```
 
+```{r,eval=FALSE}
+trim_galore --illumina --dont_gzip --stringency 5 --length 30 --paired -o trimed/ test/run_test/SRR900275_1.fastq.gz test/run_test/SRR900275_2.fastq.gz
+```
+
 ```{r, eval=FALSE}
 #!/bin/bash
 #SBATCH --nodes=4
@@ -224,38 +320,105 @@ STAR --runMode genomeGenerate \
 #SBATCH --mem=80G
 #SBATCH --error=/athena/angsd/scratch/jiq4001/error 
 spack load fastqc
-
+spack load -r trimgalore
+spack load -r py-multiqc
 # set current work dir
 cwd=/athena/angsd/scratch/jiq4001/Pj
+
 mkdir ${cwd}/QC
+mkdir ${cwd}/trimed
+mkdir ${cwd}/QC_trimed
+mkdir ${cwd}/Star_align
+mkdir ${cwd}/multi_qc
 
+input_dir=${cwd}/test
+qc_dir=${cwd}/QC
+trim_dir=${cwd}/trimed
+qc_trim_dir=${cwd}/QC_trimed
+multi_qc=${cwd}/multi_qc
 
-for file in $(ls ${cwd}/test)
-  do
-    fastqc $file -o ${cwd}/QC/$file -t 4 --extract
+for file in $(ls ${input_dir} | cut -b -9 | uniq -d)
+do
+    fastqc ${input_dir}/${file}_1.fastq.gz -o ${qc_dir} -t 16 --extract
+    fastqc ${input_dir}/${file}_2.fastq.gz -o ${qc_dir} -t 16 --extract
+    
+    trim_galore --illumina --stringency 5 --length 30 --paired -o ${trim_dir} ${input_dir}/${file}_1.fastq.gz ${input_dir}/${file}_2.fastq.gz
+    
+    fastqc ${trim_dir}/${file}_1_val_1.fq.gz -o ${qc_trim_dir} -t 16 --extract
+    fastqc ${trim_dir}/${file}_2_val_2.fq.gz -o ${qc_trim_dir} -t 16 --extract
+    
 done
 
-spack load -r py-multiqc
 
+multiqc ${qc_dir}
+multiqc ${qc_trim_dir}
 ```
+
+
 
 ```{r, eval=FALSE}
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=tmle
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=80G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error 
 cwd=/athena/angsd/scratch/jiq4001/Pj
-mkdir ${cwd}/Star_align
 
-for file in $(cat ls${cwd}/test)
+mkdir ${cwd}/Star_align
+trim_dir=${cwd}/trimed
+star_align=${cwd}/Star_align
+
+for file in $(ls ${trim_dir} | cut -b -9 | uniq -d)
 do
- STAR --runMode alignReads --runThreadN 16 --genomeDir ${cwd}/hg38_STARindex --readFilesIn ${cwd}/test/run_test --outFileNamePrefix ${cwd}/Star_align/${file}. --outSAMattributes NH HI AS nM MD --alignSJDBoverhangMin 20 --alignIntronMin 20  --alignIntronMax 1000000 \  #default #--outSJfilterOverhangMin default: 30 12 12 12
+STAR --runMode alignReads \
+--runThreadN 16 \
+--genomeDir ${cwd}/hg38_STARindex \
+--readFilesIn ${trim_dir}/${file}_1_val_1.fq.gz, ${trim_dir}/${file}_2_val_2.fq.gz \
+--outFileNamePrefix ${star_align}/${file}. \
+--outSAMattributes NH HI AS nM MD \
 --twopassMode Basic \
 --readFilesCommand zcat \
---outSAMtype BAM SortedByCoordinate
- done
- 
+--outSAMtype BAM SortedByCoordinate 
+done
+
+# ENCODE options default for human 
 #About 5.24% of introns are more than 200,000 bp and less than 10% of introns are more than 11,000 bp in length. Also, < 0.01% of the introns are < 20 bp in length   --M.K. Sakharkar et al. / Distributions of Exons and Introns in the Human Genome
 ```
+                      Number of input reads |	40909112  
+                      Average input read length |	49  
+                                    UNIQUE READS:  
+                   Uniquely mapped reads number |	33754010  
+                        Uniquely mapped reads % |	82.51%  
+                          Average mapped length |	49.57  
+                       Number of splices: Total |	5786990  
+            Number of splices: Annotated (sjdb) |	5777530  
+                       Number of splices: GT/AG |	5735122  
+                       Number of splices: GC/AG |	39239  
+                       Number of splices: AT/AC |	3807  
+               Number of splices: Non-canonical |	8822  
+                      Mismatch rate per base, % |	0.13%  
+                         Deletion rate per base |	0.00%  
+                        Deletion average length |	1.51  
+                        Insertion rate per base |	0.00%  
+                       Insertion average length |	1.28  
+                             MULTI-MAPPING READS:         
+        Number of reads mapped to multiple loci |	6593238  
+             % of reads mapped to multiple loci |	16.12%  
+        Number of reads mapped to too many loci |	178844  
+             % of reads mapped to too many loci |	0.44%  
+                                  UNMAPPED READS:  
+       % of reads unmapped: too many mismatches |	0.00%  
+                 % of reads unmapped: too short |	0.73%  
+                     % of reads unmapped: other |	0.20%  
+                                  CHIMERIC READS:   
+                       Number of chimeric reads |	0  
+                            % of chimeric reads |	0.00%  
 
 ```{r, eval=FALSE}
 https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-14-S11-S8 # impack of annotation choice  
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4631051/
 ```
 
+**NOTE: need to find out NuGEN Ovation kit's adapter sequence**
