@@ -1,5 +1,5 @@
 Status	/home/frd2007/ANGSD_2019/alignment/SNF2_1_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/SNF2_2_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/SNF2_3_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/SNF2_4_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/SNF2_5_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/WT_1_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/WT_2_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/WT_3_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/WT_4_Aligned.sortedByCoord.out.bam	/home/frd2007/ANGSD_2019/alignment/WT_5_Aligned.sortedByCoord.out.bam
-Assigned	9437369	7957169	8043041	9850454	6329682	5348865	7132022	5836109	9395607	7190058
+Assigned	10087796	8541332	8631371	10528184	6806561	5773862	7673784	6277406	10139277	7768541
 Unassigned_Unmapped	0	0	0	0	0	0	0	0	0	0
 Unassigned_MappingQuality	0	0	0	0	0	0	0	0	0	0
 Unassigned_Chimera	0	0	0	0	0	0	0	0	0	0
@@ -9,5 +9,5 @@ Unassigned_MultiMapping	0	0	0	0	0	0	0	0	0	0
 Unassigned_Secondary	0	0	0	0	0	0	0	0	0	0
 Unassigned_Nonjunction	0	0	0	0	0	0	0	0	0	0
 Unassigned_NoFeatures	747388	458993	493370	750124	433271	232966	518151	449802	593770	492354
-Unassigned_Overlapping_Length	16997	12010	12471	17727	10653	6436	12618	10773	15198	12057
-Unassigned_Ambiguity	650424	584162	588324	677728	476875	424997	541760	441294	743667	578483
+Unassigned_Overlapping_Length	16994	12009	12465	17725	10649	6436	12616	10770	15195	12057
+Unassigned_Ambiguity	0	0	0	0	0	0	0	0	0	0
