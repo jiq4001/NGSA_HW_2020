@@ -5,12 +5,21 @@ date: "2/28/2020"
 output: html_document
 ---
 
+```{css, echo=FALSE}
+.scroll {
+  max-height: 200px;
+  overflow-y: auto;
+}
+```
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(DESeq2)
 library(magrittr)
 library(ggplot2)
 ```
+
 
 ###Inspecting BAM files (1pt)  
 
@@ -76,7 +85,7 @@ overall, 10 samples are clustered to mainly 2 clusters, SNF2 and WT.
 there are not much difference from those 5 repeats(indicated by height) of SNF2, even though they were clustered and branched out.  
 The 5 bioreps of WT showed more variations than the reps of SNF2  
 
-```{r}
+```{r, fig.align="center"}
 # PCA cluster on dimentions that reduce the most variations
 # caculate var of 10 samples per geneid
 rv <- rowVars(assay(DESeq.ds, "log.norm.counts"))
@@ -84,7 +93,7 @@ rv <- rowVars(assay(DESeq.ds, "log.norm.counts"))
 top_variable <- order(rv, decreasing = TRUE)[seq_len(500)]
 pca <- prcomp(t(assay(DESeq.ds, "log.norm.counts")[top_variable, ]))
 
-plot(pca$sdev, main = "first 3 PC explains most variation of the samples")
+plot(pca$sdev, main = "first 2 PC explains most variation of the samples")
 points(x = 3, y = pca$sdev[3], col = "red")
 
 # reduction of variance of each PCs
@@ -107,9 +116,12 @@ library(pcaExplorer)
 DESeq2.rld <- DESeq2::rlogTransformation(DESeq.ds)
 pcaExplorer(DESeq.ds, DESeq2.rld)
 ```
+PCA reduce predictor dimensions by direction that captures the largest variation(distance function). as shown above, the first 2 PCs captures the most variations in that 10 samples(67.72% and 17.31% reduction of varianc accordingly), seperated the samples to WT and SNF2.  
+
+
 $\bar{w} = \sum_i^n p_iw_i$ is the weighted count mean  
-loading is defined by $L= (w_max - \bar{w})/w_max$  max or min difference from the mean.  
-top loading summarise the gene that with top max/min readscount observed.  
+loading is defined by $L= (w_max - \bar{w})/w_max$  max/min difference from the mean.  
+top loading summarise sorted the genes by difference of observed max/min readscount from the mean readscount.  
 
 
 ###Understanding DESeq2 S4 objects. (5.5pts total)  
@@ -127,14 +139,16 @@ list(DESeq.ds@assays@data)
 ```
 
 ###Describe at least 2 similarities and 2 differences between them in regards to their content and the downstream functions you may have to use to interact with them. Feel free to use any additional documentation available, just let us know how you found each answer. (4pts)  
-rlog(): wrapped function to caculate *sizeFacto*r, can be pull from colData slot  
+rlog(): wrapped function to caculate *sizeFactor*, can be pull from colData slot  
 DESeqDataSetFromMatrix)(): have to manualy do *sizeFactor*, result also will be stored in colData slot  
 DESeqDataSetFromMatrix)(): store assay *design* as formula, which will be used as treatment levels in down stream lest say regression analysis.  
-rlog(): doesnt store *design* information in S3 level under @ colData$condition     
+rlog(): doesnt store *design* information as formular, but in S3 level under @ colData$condition     
 
 ###How can you extract the expression values stored in either object? (1pt)  
 S4 level: ues @  
-S3 level: use $
+S3 level: use $  
+list: use [[]] or "name"  
+matrix, dataframe.... [a,b]  df$  
 for example:  
 ```{r, eval=F}
 rlog_re@colData$condition   
@@ -155,24 +169,46 @@ DESeq.ds@assays@data$my_personal_normalization[1,]
 ###Read the instructions here. Note that the getMethods() described there has been deprecated and has been replaced by findMethods(), which does not require you to specify the object type for which you’re retrieving the code.  
 ###Include the source code of the following DESeq2 functions in your homework’s html:  
 ###rlog()  
-```{r}
+```{r, class.output="scroll"}
 getAnywhere("rlog")
 ```
 
 ###estimateDispersions()  
-```{r}
+```{r, class.output="scroll"}
 getAnywhere("estimateDispersions")
 ```
 
 ###rlogData() – this is a non-exported function from DESeq2  
-```{r}
+```{r, class.output="scroll"}
 getAnywhere("rlogData")
 ```
 
 ###Understanding DE analysis (4pts (plus 2 pts for extra credit))  
 
 ###In your own words, describe how DESeq2 calculates a p-value that you can use to decide whether a given gene shows different expression values when comparing two conditions of interest. Start from what types of values are used as the measurements. You may consult the document on our website that contains a verbose summary of what we talked about in class. (3pts)  
+form multiple testing hypothesis: (null: no difference of average readscount in each gene between condation of comparison)  
+select the genes to be included in multiple testing  
+define contrast of interest in formular:  such as ~ treatment, batcheffect... and define which condition as level of reference.    
+since readscount of each gene can be modeled to follow negative binomial distribution(without assuming var==mean), estimate mean(size factor,and estimate of expression) and disperssion parameters.  
+do general linear regression: result coefficient is estimated fold change to reference level, raw p-value is the probability that fold change is 0(null:no difference). adjusted p-value is adjusted for multiple testing(is the correct p value to use)  
 
 ###Despite the fact that we are testing each gene individually, which calculations/values are influenced by the values of the other genes in the same matrix? Explain at least one. (1pt)  
+size factor(in determine distribution model): since it's weighted by all other genes in test  
+adjusted p-value: total number of test affact the level of adjustment  
 
 ###Bonus question (not required): From the source code of nbinomWaldTest(), identify the relevant line where the Wald statistic is calculated. Explain what the objects contain that are used for the calculation. (2pts for extra credit)  
+```{r, eval=FALSE}
+getAnywhere("nbinomWaldTest")
+#within:
+getAnywhere("fitNbinomGLMs") # estimate log2 fold change(effect size) of observation with negative binomial distribution
+#estimate log2 fold change(effect size) of observation with negative binomial distribution
+fit <- fitNbinomGLMs(objectNZ, betaTol = betaTol, maxit = maxit, 
+            useOptim = useOptim, useQR = useQR, renameCols = renameCols, 
+            modelMatrix = modelMatrix, minmu = minmu)
+
+betaMatrix <- fit$betaMatrix # coefficients:effect size/log2 fold change
+betaSE <- fit$betaSE  #coefficients standard errors
+WaldStatistic <- betaMatrix/betaSE #coefficients are scaled by their standard errors
+WaldPvalue <- 2 * pt(abs(WaldStatistic), df = df, lower.tail = FALSE) / WaldPvalue <- 2 * pnorm(abs(WaldStatistic), lower.tail = FALSE) # p-value depends on comparing to zero-centered t distribution or normal distribution 
+```
+
