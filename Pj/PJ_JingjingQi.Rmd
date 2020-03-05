@@ -14,7 +14,150 @@ library(tidyverse)
 meta <- read.delim("SraRunTable.txt", sep = ",", header = T)
 srr_acc <- read.delim("SRR_Acc_List.txt", header = F)
 drop_repinfo <- meta[apply(meta, 2, function(x) length(unique(x)) != 1)]
+drop_repinfo$source <- c("DHF168", "BSO19B", "BSO28", "BSO29", "BSO30", "BSO32N", "BSO36", "BSO37",
+                         "DHF168", "BSO19B", "BSO28", "BSO29", "BSO30", "BSO32N", "BSO36", "BSO37")
 drop_repinfo %>%
-  filter(rna_preparation != "Illumina PolyA")
+  select(Run, involution, rna_preparation, source)
+```
+
+The vast majority of RNA-seq data are analyzed without duplicate removal. Duplicate removal is not possible for single-read data (without UMIs). De-duplification is more likely to cause harm to the analysis than to provide benefits even for paired-end data (Parekh et al.  2016; below).  This is because the use of simple sequence comparisons or the typical use of alignment coordinates to identify “duplicated reads” will lead to the removal of valid biological duplicates.  RNA-seq library preparation involves several processing steps (e.g. fragmentation, random priming, A-tailing, ligation); none of these processes is truly random or unbiased.  Thus, the occurrence of “duplicated reads” in between millions of reads can be expected even in paired-end read data. Short transcripts and very highly expressed transcripts will show the majority of such “natural” duplicates. Their removal would distort the data.  For example plant RNA-seq data often seem to contain large amounts of duplicated reads. This is in part due to the fact the gene expression in many plant tissues, like leaves, is dominated by a small number of transcripts; much more so than in most animal samples. Another concern is that the fraction of reads identified as “duplicated” is correlated to the number of aligned reads. Thus, one would have to normalize any data set for equal read numbers to avoid introducing additional bias.   
+source: https://dnatech.genomecenter.ucdavis.edu/faqs/should-i-remove-pcr-duplicates-from-my-rna-seq-data/  
+ 
+Relative Log Expression (RLE): Similar to TMM, this normalization method is based on the hypothesis that the most genes are not DE. For a given sample, the RLE scaling factor is calculated as the median of the ratio, for each gene, of its read counts over its geometric mean across all samples. By assuming most genes are not DE, the median of the ratio for a given sample is used as a correction factor to all read counts to fulfill this hypothesis [34]. This normalization method is included in the DESeq and DESeq2 Bioconductor packages [34,35].  
+
+
+1. two library experiment have different depth
+2. proper normalization method, since it's know that two method map align different amount of genes 
+
+Appendex: 
+
+###Record:  
+Genome:  
+http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
+Annotation:  
+http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/  
+hg38.refGene.gtf.gz        10-Jan-2020 09:33   23M  
+hg38.trf.bed.gz - Tandem Repeats Finder locations, filtered to keep repeats
+    with period less than or equal to 12, and translated into UCSC's BED
+    format.
+genomeGenerate: --sjdbOverhang 99  
+alignReads: --alignIntronMin 20 --alignIntronMax 1000000 --twopassMode Basic  
+# ENCODE options default for human  
+#About 5.24% of introns are more than 200,000 bp and less than 10% of introns are more than 11,000 bp in length. Also, < 0.01% of the introns are < 20 bp in length   --M.K. Sakharkar et al. / Distributions of Exons and Introns in the Human Genome  
+
+```{r, eval=FALSE}
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=qc_bash
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=50G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error 
+spack load fastqc
+spack load -r trimgalore
+spack load -r py-multiqc
+
+# set current work dir
+cwd=/athena/angsd/scratch/jiq4001/Pj
+
+mkdir ${cwd}/QC
+mkdir ${cwd}/QC/non_trimed
+#mkdir ${cwd}/trimed
+#mkdir ${cwd}/QC/trimed
+mkdir ${cwd}/multi_qc
+
+input_dir=${cwd}/test
+qc_dir=${cwd}/QC/non_trimed
+#trim_dir=${cwd}/trimed
+#qc_trim_dir=${cwd}/QC_trimed
+multi_qc=${cwd}/multi_qc
+
+for file in $(ls ${input_dir} | cut -b -9 | uniq -d)
+do
+    fastqc ${input_dir}/${file}_1.fastq.gz -o ${qc_dir} -t 16 --extract
+    fastqc ${input_dir}/${file}_2.fastq.gz -o ${qc_dir} -t 16 --extract
+    
+    #trim_galore --illumina --stringency 5 --length 30 --paired -o ${trim_dir} ${input_dir}/${file}_1.fastq.gz ${input_dir}/${file}_2.fastq.gz
+    
+    #fastqc ${trim_dir}/${file}_1_val_1.fq.gz -o ${qc_trim_dir} -t 16 --extract
+    #fastqc ${trim_dir}/${file}_2_val_2.fq.gz -o ${qc_trim_dir} -t 16 --extract
+done
+
+cd ${multi_qc}
+multiqc ${qc_dir}
+```
+
+![Sequence Duplication Level](Raw_umltiqc_1.png){width=450px}, 
+![Sequence Count](Raw_umltiqc_2.png){width=450px}  
+
+Samples prepared by poly-A protocol showed higher duplication level, which is expected considering the add-in of adapter sequence. Since all samples passed Fastqc, no further trimming is done for downstream analysis. 
+```{r, eval=FALSE}
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=idx
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=80G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error
+#SBATCH --out=/athena/angsd/scratch/jiq4001/out
+
+spack load star@2.7.0e
+
+cwd=/athena/angsd/scratch/jiq4001/Pj
+  
+mkdir ${cwd}/Star_align
+sample_dir=${cwd}/test
+star_align=${cwd}/Star_align
+
+for file in $(ls ${sample_dir} | cut -b -9 | uniq -d)
+do
+STAR --runMode alignReads \
+--runThreadN 16 \
+--genomeDir ${cwd}/hg38_STARindex \
+--readFilesIn ${sample_dir}/${file}_1.fastq.gz ${sample_dir}/${file}_2.fastq.gz \
+--outFileNamePrefix ${star_align}/${file}. \
+--outSAMattributes NH HI AS nM MD \
+--twopassMode Basic \
+--readFilesCommand zcat \
+--outSAMtype BAM SortedByCoordinate
+done
+```
+
+```{r, eval=FALSE}
+[jiq4001@farina Star_align]$spack load samtools@1.9%gcc@6.3.0
+
+# index aligned file
+[jiq4001@farina Star_align]$ for file in $(ls | egrep ".*.bam"); do  samtools index ${file}; done
+
+#  flagstat aligned file
+[jiq4001@farina Star_align]$ for file in $(ls | egrep ".*.bam$"); do samtools flagstat ${file} >> ${file}_flagstat_out; done
+
+
+
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=idx
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=60G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error
+#SBATCH --out=/athena/angsd/scratch/jiq4001/out
+
+cwd=/athena/angsd/scratch/jiq4001/Pj
+
+spack load -r py-rseqc
+
+for SAMPLE in $(ls ${cwd}/Star_align | egrep ".*.bam$")
+do
+read_distribution.py -i ${cwd}/Star_align/${SAMPLE} -r ${cwd}/hg38.trf.bed > ${cwd}/QC_Star_align/${SAMPLE}.read_distribution.out
+
+geneBody_coverage.py -i ${cwd}/Star_align/${SAMPLE} -r ${cwd}/hg38.trf.bed -o ${cwd}/QC_Star_align/${SAMPLE}.geneBody_coverage.out
+
+mismatch_profile.py -i ${cwd}/Star_align/${SAMPLE} -r ${cwd}/hg38.trf.bed -o ${cwd}/QC_Star_align/${SAMPLE}.mismatch_profile.out
+
+done
+
+
+## run multiqc .....
 ```
 
