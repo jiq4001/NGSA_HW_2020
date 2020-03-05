@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(data.table)
+library(DESeq2)
 ```
 
 ```{r}
@@ -17,7 +19,7 @@ drop_repinfo <- meta[apply(meta, 2, function(x) length(unique(x)) != 1)]
 drop_repinfo$source <- c("DHF168", "BSO19B", "BSO28", "BSO29", "BSO30", "BSO32N", "BSO36", "BSO37",
                          "DHF168", "BSO19B", "BSO28", "BSO29", "BSO30", "BSO32N", "BSO36", "BSO37")
 drop_repinfo %>%
-  select(Run, involution, rna_preparation, source)
+  select(Run, involution, rna_preparation, source) -> meta
 ```
 
 The vast majority of RNA-seq data are analyzed without duplicate removal. Duplicate removal is not possible for single-read data (without UMIs). De-duplification is more likely to cause harm to the analysis than to provide benefits even for paired-end data (Parekh et al.  2016; below).  This is because the use of simple sequence comparisons or the typical use of alignment coordinates to identify “duplicated reads” will lead to the removal of valid biological duplicates.  RNA-seq library preparation involves several processing steps (e.g. fragmentation, random priming, A-tailing, ligation); none of these processes is truly random or unbiased.  Thus, the occurrence of “duplicated reads” in between millions of reads can be expected even in paired-end read data. Short transcripts and very highly expressed transcripts will show the majority of such “natural” duplicates. Their removal would distort the data.  For example plant RNA-seq data often seem to contain large amounts of duplicated reads. This is in part due to the fact the gene expression in many plant tissues, like leaves, is dominated by a small number of transcripts; much more so than in most animal samples. Another concern is that the fraction of reads identified as “duplicated” is correlated to the number of aligned reads. Thus, one would have to normalize any data set for equal read numbers to avoid introducing additional bias.   
@@ -123,6 +125,7 @@ STAR --runMode alignReads \
 done
 ```
 
+###alignment QC  
 ```{r, eval=FALSE}
 [jiq4001@farina Star_align]$spack load samtools@1.9%gcc@6.3.0
 
@@ -160,4 +163,191 @@ done
 
 ## run multiqc .....
 ```
+
+### reads count   
+```{r,eval=FALSE}
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=idx
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=80G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error
+#SBATCH --out=/athena/angsd/scratch/jiq4001/out
+
+spack load subread
+
+#mkdir reads_count
+cwd=/athena/angsd/scratch/jiq4001/Pj
+sample_dir=${cwd}/Star_align  
+out_dir=${cwd}/reads_count
+
+
+featureCounts -a ${cwd}/hg38.refGene.gtf \
+-o ${out_dir}/featCounts_all.txt \
+--minOverlap 25 \
+-t "exon" \
+-g "gene_id" \
+--primary \
+--tmpDir '/scratchLocal' \
+${sample_dir}/*.bam
+```
+![IGV](IGV.png){width=450px}  
+
+```{r}
+r_exon <- fread("featCounts_all.txt.summary")
+#head(r_exon)
+
+rename <- gsub(".Aligned.sortedByCoord.out.bam$", "", x = colnames(r_exon))
+rename <- gsub("/athena/angsd/scratch/jiq4001/Pj/Star_align/", "", x = rename)
+colnames(r_exon) <- rename
+
+r_exon %>%
+  filter(Status == "Assigned" | Status == "Unassigned_MultiMapping" | Status == "Unassigned_NoFeatures") %>%
+  gather(-Status, key = "sample", value = "reads") %>%
+  group_by(sample) %>%
+  mutate(percent = round(reads/sum(reads)*100, 2)) %>%
+  merge.data.frame(meta, by.x = "sample", by.y = "Run", all.x = TRUE) -> r_exon_meata
+
+r_exon_meata %>%
+  ggplot()+
+  geom_bar(aes(sample, percent, fill = Status), stat = "identity", position = "stack")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line(colour = "black")) -> p1
+
+r_exon_meata %>%
+  ggplot()+
+  geom_bar(aes(sample, reads, fill = Status), stat = "identity", position = "stack")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        axis.line = element_line(colour = "black"))-> p2
+
+r_exon_meata %>%
+  ggpubr::ggboxplot(x = "Status", y = "percent",
+                color = "rna_preparation", add = "jitter", shape = "rna_preparation",
+                legend = "bottom")-> p3
+
+#bar plot
+ggpubr::ggarrange(p1, p2, common.legend = T, legend = "bottom")
+p3
+
+
+r_exon_meata
+```
+##qualitive graph size of gene vs methods ?????    
+
+```{r}
+# read data table
+rc0 <- read.table("featCounts_all.txt", header=TRUE, row.names = NULL)
+head(rc0)
+
+# trim extra text from colname
+names(rc0) <- gsub("X.athena.angsd.scratch.jiq4001.Pj.Star_align.", "", names(rc0))
+names(rc0) <- gsub(".Aligned.sortedByCoord.out.bam", "", names(rc0))
+str(rc0)
+
+# generate rowname with GeneId
+row.names(rc0) <- make.names(rc0$Geneid, unique = T) 
+readcounts <- rc0[ , -c(1:6)]
+
+r_exon_meata %>%
+  arrange(rna_preparation, sample) %>%
+  select(sample, involution, rna_preparation, source) %>%
+  unique() %>%
+  merge.data.frame(data.frame(sample = colnames(readcounts)), all.y = T) -> sampleinfo_df
+
+##########
+#seperated by library methods
+##########
+
+# create condations with colnames from readcount
+poly_a <- readcounts[, 1 : 8]
+names(poly_a) <- sampleinfo_df$source[1 : 8]
+poly_a_info <- DataFrame(condition = sampleinfo_df$involution[sampleinfo_df$rna_preparation == "Illumina PolyA"],
+row.names = names(poly_a) )
+
+nugen <- readcounts[, 9 : 16]
+names(nugen) <- sampleinfo_df$source[9 : 16]
+nugen_info <- DataFrame(condition = sampleinfo_df$involution[sampleinfo_df$rna_preparation == "NuGEN Ovation"],
+row.names = names(nugen) )
+
+
+# wrap reads, condation into object
+DESeq.poly_a <- DESeqDataSetFromMatrix(countData = poly_a,
+colData = poly_a_info,
+design = ~ condition)
+
+DESeq.nugen <- DESeqDataSetFromMatrix(countData = nugen,
+colData = nugen_info,
+design = ~ condition)
+
+
+# normalization
+DESeq.poly_a <- estimateSizeFactors(DESeq.poly_a) 
+log.norm.counts <- log2(counts(DESeq.poly_a, normalized=TRUE) + 1)
+assay(DESeq.poly_a, "log.norm.counts") <- log.norm.counts
+
+
+DESeq.nugen <- estimateSizeFactors(DESeq.nugen)
+log.norm.counts <- log2(counts(DESeq.nugen, normalized=TRUE) + 1)
+assay(DESeq.nugen, "log.norm.counts") <- log.norm.counts
+```
+
+```{r}
+corr_coeff <- cor(assay(DESeq.poly_a, "log.norm.counts"), method = "pearson")
+# use cor plot dendrogram
+as.dist(1 - corr_coeff) %>% 
+  hclust %>%
+plot( ., labels = colnames(corr_coeff),
+      main = "Dendrogram of rlog transformed read counts", sub = "")
+heatmap(corr_coeff)
+
+```
+```{r}
+DESeq.poly_a <- DESeq(DESeq.poly_a)
+poly_a.results <- results(DESeq.poly_a, independentFiltering = TRUE, alpha = 0.05)
+summary(poly_a.results)
+table(poly_a.results$padj < 0.05)
+hist(poly_a.results$padj)
+plotMA(poly_a.results, alpha = 0.05,
+main = "Test: p.adj.value < 0.05", ylim = c(-4,4))
+```
+```{r}
+DESeq.nugen <- DESeq(DESeq.nugen)
+nugen.results <- results(DESeq.nugen, independentFiltering = TRUE, alpha = 0.05)
+summary(nugen.results)
+table(nugen.results$padj < 0.05)
+nugen.results@rownames[which(nugen.results$padj < 0.05)]
+hist(nugen.results$padj)
+plotMA(nugen.results, alpha = 0.05,
+main = "Test: p.adj.value < 0.05", ylim = c(-4,4))
+```
+```{r}
+
+merge.data.frame(data.frame(df_gene = poly_a.results@rownames[which(poly_a.results$padj < 0.05)],
+                            pvalue = poly_a.results$log2FoldChange[which(poly_a.results$padj < 0.05)]),
+                 data.frame(df_gene = nugen.results@rownames[which(nugen.results$padj < 0.05)],
+                            pvalue = nugen.results$log2FoldChange[which(nugen.results$padj < 0.05)]),
+                 by = "df_gene", all.x = T) -> df_p
+cor(df_p$pvalue.x, df_p$pvalue.y)
+
+
+merge.data.frame(data.frame(df_gene = poly_a.results@rownames,
+                            pvalue = poly_a.results$log2FoldChange),
+                 data.frame(df_gene = nugen.results@rownames,
+                            pvalue = nugen.results$log2FoldChange),
+                 by = "df_gene", all.x = T) %>% drop_na() -> df_p
+
+
+cor(df_p$pvalue.x, df_p$pvalue.y)
+```
+
+
+
+Assumptions
+DE and non-DE genes behave the same: Technical effects are the same for DE and non-DE genes.
+
+Balanced expression: There is roughly symmetric differential expression across conditions 
+
+###Disscussion:  
+8 biological samples, paired for 2 methods of library preparation. For DE analysis, no imformation was given as the sample is paired or not. 
 
