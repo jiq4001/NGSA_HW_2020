@@ -270,6 +270,12 @@ names(nugen) <- sampleinfo_df$source[9 : 16]
 nugen_info <- DataFrame(condition = sampleinfo_df$involution[sampleinfo_df$rna_preparation == "NuGEN Ovation"],
 row.names = names(nugen) )
 
+all <- readcounts
+names(all) <- sampleinfo_df$sample
+all_info <- DataFrame(involution = sampleinfo_df$involution,
+                      librarymethod = sampleinfo_df$rna_preparation,
+                      row.names = names(all))
+
 
 # wrap reads, condation into object
 DESeq.poly_a <- DESeqDataSetFromMatrix(countData = poly_a,
@@ -280,6 +286,9 @@ DESeq.nugen <- DESeqDataSetFromMatrix(countData = nugen,
 colData = nugen_info,
 design = ~ condition)
 
+DESeq.all <- DESeqDataSetFromMatrix(countData = all,
+colData = all_info,
+design = ~ involution + librarymethod + librarymethod : involution)
 
 # normalization
 DESeq.poly_a <- estimateSizeFactors(DESeq.poly_a) 
@@ -290,10 +299,14 @@ assay(DESeq.poly_a, "log.norm.counts") <- log.norm.counts
 DESeq.nugen <- estimateSizeFactors(DESeq.nugen)
 log.norm.counts <- log2(counts(DESeq.nugen, normalized=TRUE) + 1)
 assay(DESeq.nugen, "log.norm.counts") <- log.norm.counts
+
+DESeq.all <- estimateSizeFactors(DESeq.all)
+log.norm.counts <- log2(counts(DESeq.all, normalized=TRUE) + 1)
+assay(DESeq.all, "log.norm.counts") <- log.norm.counts
 ```
 
 ```{r}
-corr_coeff <- cor(assay(DESeq.poly_a, "log.norm.counts"), method = "pearson")
+corr_coeff <- cor(assay(DESeq.all, "log.norm.counts"), method = "pearson")
 # use cor plot dendrogram
 as.dist(1 - corr_coeff) %>% 
   hclust %>%
@@ -304,13 +317,16 @@ heatmap(corr_coeff)
 ```
 ```{r}
 DESeq.poly_a <- DESeq(DESeq.poly_a)
-poly_a.results <- results(DESeq.poly_a, independentFiltering = TRUE, alpha = 0.05)
-summary(poly_a.results)
-table(poly_a.results$padj < 0.05)
-hist(poly_a.results$padj)
-plotMA(poly_a.results, alpha = 0.05,
+DESeq.poly_a.results <- results(DESeq.poly_a, independentFiltering = TRUE, alpha = 0.05)
+summary(DESeq.poly_a.results)
+table(DESeq.poly_a.results$padj < 0.05)
+hist(DESeq.poly_a.results$padj)
+plotMA(DESeq.poly_a.results, alpha = 0.05,
 main = "Test: p.adj.value < 0.05", ylim = c(-4,4))
 ```
+
+
+
 ```{r}
 DESeq.nugen <- DESeq(DESeq.nugen)
 nugen.results <- results(DESeq.nugen, independentFiltering = TRUE, alpha = 0.05)
