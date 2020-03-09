@@ -38,7 +38,7 @@ drop_repinfo$source <- c("DHF168", "BSO19B", "BSO28", "BSO29", "BSO30", "BSO32N"
 drop_repinfo %>%
   select(Run, involution, rna_preparation, source) -> meta
 
-meta
+meta%>% kableExtra::kable(align = "c")
 ```
 
 ###RNA Sequencing  
@@ -91,10 +91,6 @@ ggpubr::ggarrange(p1, p2, common.legend = T, legend = "bottom")
 ```
 Given different sequencing platform were used NuGEN and Illumina protocol, RNAseq data with NuGEN library preparatoin method has more reads on average compare to Illumina data, with Assigned Reads count about the same level in both protocals(32302702counts by Illumina and 33137180counts by NuGEN respectively). 65.41% of the Illumina library reads was uniquely mapped to the reference genome, however, only 17.99% or the NuGEN reads was uniquely mapped. 46.98% of the reads was unassigned due to multiMapping in NuGEN protocal data, while Illumina reads has 24.83% unassigned due to multiMapping. 35.03% of the reads in NuGEN protocal data wasnt mapped to any features, but only 9.76% of the Illumina reads was not mapped to features in the annotation file.  
 
-*Figure1. Gene Body Coverage*  
-![](Gene_body_coverage.png){width=700px}
-
-It appears both sequencing experiments with either library preparation methods are not able to get ideal sufficient coverage at 5'end, though the aim was not to identify low expression genes.  
 
 *Figure2. Boxplot of readscount by mapping status and librarly prep method*
 ```{r, echo=F, fig.align="center"}
@@ -123,8 +119,8 @@ ggpubr::ggarrange(p3, p4, common.legend = T, legend = "bottom")
 ```
 
 *Table2. Summary of readscount by mapping status and librarly prep method*  
-```{r}
-read_summ
+```{r, echo=F}
+read_summ %>% kableExtra::kable(align = "c")
 ```
 
 
@@ -389,6 +385,11 @@ done
 ## run multiqc .....
 ```
 
+*Figure1. Gene Body Coverage*  
+![](Gene_body_coverage.png){width=500px}
+
+It appears both sequencing experiments with either library preparation methods are not able to get ideal sufficient coverage at 5'end, though the aim was not to identify low expression genes.  
+
 Reads count   
 ```{r,eval=FALSE, class.output="scroll"}
 #SBATCH --ntasks=1 --cpus-per-task=16
@@ -434,7 +435,6 @@ Nugen.results
 #nugen.results <- results(DESeq.nugen, independentFiltering = TRUE, alpha = 0.05)
 summary(nugen.results)
 table(nugen.results$padj < 0.05)
-nugen.results@rownames[which(nugen.results$padj < 0.05)]
 #hist(nugen.results$padj)
 plotMA(nugen.results, alpha = 0.05,
 main = "Test: p.adj.value < 0.05", ylim = c(-4,4))
