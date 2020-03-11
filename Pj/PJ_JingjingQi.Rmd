@@ -310,8 +310,9 @@ corr_coeff <- cor(assay(DESeq.all, "log.norm.counts"), method = "pearson")
 # use cor plot dendrogram
 as.dist(1 - corr_coeff) %>% 
   hclust %>%
-plot( ., labels = colnames(corr_coeff),
+  plot( ., labels = colnames(corr_coeff),
       main = "Dendrogram of rlog transformed read counts", sub = "")
+
 heatmap(corr_coeff)
 
 ```
