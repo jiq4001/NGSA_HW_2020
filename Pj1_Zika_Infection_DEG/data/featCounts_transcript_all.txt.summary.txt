@@ -1,0 +1,13 @@
+Status	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244251.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244252.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244253.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244254.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244255.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244256.Aligned.sortedByCoord.out.bam
+Assigned	84089587	76165952	68521404	67298285	71695465	65391471
+Unassigned_Unmapped	0	0	0	0	0	0
+Unassigned_MappingQuality	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0
+Unassigned_MultiMapping	32864736	38110026	29056314	34262372	25880128	27600556
+Unassigned_Secondary	0	0	0	0	0	0
+Unassigned_Nonjunction	0	0	0	0	0	0
+Unassigned_NoFeatures	11742499	9403065	9252786	8912624	10322081	9041120
+Unassigned_Overlapping_Length	35761	33420	28020	29319	30610	26981
+Unassigned_Ambiguity	6827549	6491151	5749960	5841396	5737062	5244058

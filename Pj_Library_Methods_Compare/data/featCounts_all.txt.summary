@@ -1,0 +1,13 @@
+Status	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900275.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900276.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900277.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900278.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900279.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900280.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900281.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900282.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900283.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900284.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900285.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900286.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900287.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900288.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900289.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj/Star_align/SRR900290.Aligned.sortedByCoord.out.bam
+Assigned	31030493	31563395	34545351	30700936	36308230	31469697	29753356	33050157	31915075	32867342	34507468	33754066	34325828	29607701	32767411	35352545
+Unassigned_Unmapped	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MappingQuality	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MultiMapping	17582950	12307382	10617090	10786418	14234864	12035580	10422030	10802532	94421886	66649160	119943118	92466864	94648038	72453736	77114150	84918442
+Unassigned_Secondary	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Nonjunction	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_NoFeatures	5082431	4135569	4566156	5136458	5117831	5496118	4848108	4135308	68903520	58708667	66154669	67386445	68006755	66723531	64827571	56397598
+Unassigned_Overlapping_Length	111759	103815	101189	101497	116695	122915	107496	93017	485298	444405	461745	460503	495732	501336	543778	427552
+Unassigned_Ambiguity	810721	845617	912192	849507	955970	878630	911212	852260	1830531	1612814	2586948	3487656	1820013	1954358	6019266	2529315
