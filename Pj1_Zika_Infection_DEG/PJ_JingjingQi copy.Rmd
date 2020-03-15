@@ -169,8 +169,8 @@ gid <- rownames(rc0)
 pwf <- nullp(gene.vector, id = gid, bias.data = glen)
 go.wall <- goseq(pwf,"hg38","geneSymbol", use_genes_without_cat=T)
 #go.gns <- getgo(rownames(DESeq.all.result), "hg38", "geneSymbol")%>%stack()
-go.wall %>%
-  filter(over_represented_pvalue <= 0.05 | under_represented_pvalue <= 0.05)-> go.wall
+idx <- p.adjust(go.wall$over_represented_pvalue,method="BH")<.05 | p.adjust(go.wall$under_represented_pvalue,method="BH")<.05
+go.wall <- go.wall[idx,]
 #write_csv(go.wall, "go.wall.csv")
 source("revigo_r/REVIGO_treemap.r")  
 
