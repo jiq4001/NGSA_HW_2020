@@ -1,0 +1,198 @@
+---
+title: "Untitled"
+author: "JingjingQi"
+date: "3/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(scRNAseq)
+library(scater)
+library(magrittr)
+library(ggplot2)
+library(scran)
+library(SCnorm)
+```
+
+###1. Wrangling scRNA-seq data in R using bioconductor packages. (11 pts total plus 2 extra-credit points possible)
+Download the count matrix (WT-1.dge.txt.gz) and read it into R.   
+Note: given the size of the matrix, you may have to do the analysis on the server, where you will not have access to RStudio, but to the console (just type R after logging in and switching to your designated folder). To obtain images for your Rmarkdown report, you could, for example, opt to write and compile the Rmd on your laptop. This would mean that you should set the chunk options to eval=FALSE because you’re not going to actually execute the code on your machine. To include images this way, you would have to compute them on the server, download them via scp and integrate them into the report via the common markdown syntax: ![](path-to-image). For more info on code chunks, see here. ALTERNATIVELY, without changing the chunk options, you could compile the html on the server where rmarkdown::render("input.Rmd") (within R) will carry out the rendering that happens when you click “Knit” in RStudio.  
+
+```{r}
+df <- readtab("WT-1.dge.txt")
+```
+
+```{r}
+head(df)
+#dim(df)
+Row_Name <- df[, "GENE"]
+Count_Matrix <- df[, 2:ncol(df)]
+row.names(Count_Matrix) <- Row_Name
+
+```
+
+
+###What do the columns represent? What do the rows represent? (1pt)  
+25319 rows: genes; 1401 column: uniquely barcoded assay     
+
+###Create a SingleCellExperiment object. (This resource is useful in getting to know the capabilities of the bioconductor objects related to scRNA-seq). (1pt)  
+```{r}
+sce <- SingleCellExperiment(assays = list(counts = Count_Matrix))
+sce
+```
+
+
+###Show a snippet of the count matrix that is now part of the SCE object. (0.5pt)  
+top 5 rows, first 5 columns from left  
+```{r}
+assay(sce, "counts")[1:5, 1:5]
+```
+  
+###Calculate the numbers of reads (~ sequencing depths) for the first five cells, i.e. you should have 5 values in the end. (1pt)  
+```{r}
+assay(sce, "counts")[, 1:5] %>% colSums()
+```
+
+###How many genes have non-zero counts in the first five cells? (1pt)  
+```{r}
+sum(assay(sce, "counts")[, 1:5]%>% rowSums() != 0)
+```
+
+If you were to change the row- and column-names of the original matrix, how could you keep track of the original names? (1pt)  
+```{r}
+rownames(sce)%>% head()
+rowData(sce) # empty 
+rowData(sce) <- rownames(sce)
+```
+
+Following the scater workflow, generate histograms or density plots of (a) the total number of UMI counts per cell and (b) total number of expressed genes. (1pt plus 1pt extra-credit if you generate the plots with ggplot2).  
+```{r}
+per.cell <- perCellQCMetrics(as.matrix(assay(sce, "counts")), subsets = list(Mito = grep("^mt", ignore.case = T, rownames(sce) )))
+
+ggplot(per.cell%>%data.frame())+
+  geom_density(aes(sum))+
+  theme_bw()+
+  ggtitle("deisity plot-total UMI counts/cell")+
+  xlab("per-cell library size") -> p1
+
+ggplot(per.cell%>%data.frame())+
+  geom_density(aes(detected))+
+  theme_bw()+
+  ggtitle("deisity plot-total expressed genes/cell")+
+  xlab("per-cell genes with non-zero expression") -> p2
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+```
+
+###Describe in your own words what the two different histograms show and what that means for the data at hand. (2pts)   
+SUM :: distribution of per-cell library size in the experiment  
+Detected :: distribution of per-cell genes with non-zero expression  
+
+##For another extra-credit point, you could generate the histogram for “% mitochondrial reads”.
+Note: You may find that the histograms are not as informative as you had hoped. You may find the combination of violin plots (geom_violin()) and beeswarm plots (ggbeeswarm::geom_quasirandom(alpha = 0.5)) more helpful. More details on beeswarm plots can be found here.
+```{r, warning=F, message=F}
+ggplot(per.cell%>%data.frame())+
+  geom_density(aes(subsets_Mito_percent))+
+  theme_bw()+
+  ggtitle("deisity plot-total Mito_percent counts/cell")+
+  xlab("Mito_percent counts/cell") -> p1
+
+ggplot(per.cell%>%data.frame())+
+  geom_violin(aes(y = subsets_Mito_percent, x = 1: nrow(per.cell)), trim = F)+
+  theme_bw()+
+  ggtitle("violin plot-total Mito_percent counts/cell")+
+  xlab("Mito_percent counts/cell") -> p2
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+```
+
+###Decide on some threshold for either QC parameter and remove the corresponding cells. (1pt)  
+```{r, warning=F, message=F}
+### filtering low quality assay
+reasons <- quickPerCellQC(per.cell, percent_subsets=c("subsets_Mito_percent", "detected", "sum"))
+sce$discard <- reasons$discard
+colData(sce) <- cbind(colData(sce), per.cell)
+#sum(reasons$discard)
+plot(per.cell$detected, per.cell$subsets_Mito_percent, col = ifelse(reasons$discard, "red", "black"),
+     main = "visualize outlier by quickPerCellQC()")
+
+filtered <- as.matrix(assay(sce, "counts"))[, !sce$discard]
+filtered_sce <- sce[,!sce$discard]
+
+
+#libsize.drop <- isOutlier(per.cell$sum, nmads=3, type="higher", log=F)
+#feature.drop <- isOutlier(per.cell$detected, nmads=3, type="lower", log=F)
+#mito.drop <- isOutlier(per.cell$subsets_Mito_percent, nmads=3, type="higher")
+#sce$discard <- (libsize.drop | feature.drop | mito.drop )
+#plot(per.cell$detected, per.cell$subsets_Mito_percent, col = ifelse(sce$discard, "red", "black"),
+#     main = "visualize outlier by quickPerCellQC()")
+
+```
+
+###Using the filtered data set, normalize the counts using scran and scater and judge whether the size factors calculated by computeSumFactors show the expected behavior as shown in Figure 6 of the simpleSingleCell workflow. (1pt)  
+```{r}
+#sum(nexprs(filtered, byrow=TRUE) == 0 )
+keep_feature <- nexprs(filtered, byrow=TRUE) > 0
+filtered_sce <- filtered_sce[keep_feature,]
+#dim(example_sce)
+filtered_sce <- logNormCounts(filtered_sce, name = "scater")
+
+
+clusters <- quickCluster(filtered_sce)
+summary(sizeFactors(sce))
+filtered_sf <- computeSumFactors(as.matrix(assay(filtered_sce, "counts")), clusters=clusters, assay.type = "SingleCellExperiment")
+filtered_sce <- logNormCounts(filtered_sce, name = "scran", size_factors = filtered_sf)
+
+
+assay(filtered_sce, "scran")%>%
+  cbind.data.frame(RS = rowSums(assay(filtered_sce, "scran"))) %>%
+  dplyr::arrange(desc(RS))%>%
+  head(3)%>%
+  rbind.data.frame(Log_seq_depth = assay(filtered_sce, "scran")%>%colSums()%>%log())%>%
+  data.table::transpose()%>%
+  tidyr::gather(-V4, key = "gene", value = "expression")%>%
+  ggplot(aes(V4, log(expression), color = gene))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ylim(c(0,4))+
+  theme_bw() -> p1
+  
+
+assay(filtered_sce, "scater")%>%
+  cbind.data.frame(RS = rowSums(assay(filtered_sce, "scater"))) %>%
+  dplyr::arrange(desc(RS))%>%
+  head(3)%>%
+  rbind.data.frame(Log_seq_depth = assay(filtered_sce, "scater")%>%colSums()%>%log())%>%
+  data.table::transpose()%>%
+  tidyr::gather(-V4, key = "gene", value = "expression")%>%
+  ggplot(aes(V4, log(expression), color = gene))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ylim(c(0,4))+
+  theme_bw() -> p2
+
+gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+```
+
+###How can you access the normalized data matrix? (0.5pt)  
+```{r, eval=F}
+assayNames(filtered_sce)
+```
+
+###2. scRNA-seq data wrangling in R using Seurat. (8.5pts)  
+###Seurat can be installed via the usual install.packages routine.  
+
+Create a Seurat object. (1pt)
+Perform the same filtering that you chose to do on the SCE object. (1pt)
+Normalize the data using scTransform (1pt)
+How can you access the normalized data matrix, i.e. the matrix of Pearson residuals? (0.5pts)
+For the first 10 cells, do pairwise comparisons for each cell of the normalized values from the Seurat object and the SCE object (scatter plots are fine; you may want to check out the GGally package, specifically the ggpairs function. We also recommend to remove genes that have zero counts in all the samples). Explain what you see. (2pts)
+What is the difference between the function implemented in scTransform and the integration routine that is described here and by Stuart et al.? (1pt  
+
+###3. Final question: what types of cells do you think you’re looking at? (1pt + 1 extra-credit point)
+Hint: It is a fairly homogeneous population, i.e. all cells would probably be called the same cell name where cell name would be something like “skin cell”. Explain your reasoning!
+
+The point is for your reasoning, there will be an extra-credit point if you identify the cell type correctly.
