@@ -13,6 +13,8 @@ library(magrittr)
 library(ggplot2)
 library(scran)
 library(SCnorm)
+library(Seurat)
+library(tidyverse)
 ```
 
 ###1. Wrangling scRNA-seq data in R using bioconductor packages. (11 pts total plus 2 extra-credit points possible)
@@ -20,7 +22,7 @@ Download the count matrix (WT-1.dge.txt.gz) and read it into R.
 Note: given the size of the matrix, you may have to do the analysis on the server, where you will not have access to RStudio, but to the console (just type R after logging in and switching to your designated folder). To obtain images for your Rmarkdown report, you could, for example, opt to write and compile the Rmd on your laptop. This would mean that you should set the chunk options to eval=FALSE because you’re not going to actually execute the code on your machine. To include images this way, you would have to compute them on the server, download them via scp and integrate them into the report via the common markdown syntax: ![](path-to-image). For more info on code chunks, see here. ALTERNATIVELY, without changing the chunk options, you could compile the html on the server where rmarkdown::render("input.Rmd") (within R) will carry out the rendering that happens when you click “Knit” in RStudio.  
 
 ```{r}
-df <- readtab("WT-1.dge.txt")
+df <- read.delim("WT-1.dge.txt")
 ```
 
 ```{r}
@@ -29,7 +31,6 @@ head(df)
 Row_Name <- df[, "GENE"]
 Count_Matrix <- df[, 2:ncol(df)]
 row.names(Count_Matrix) <- Row_Name
-
 ```
 
 
@@ -69,6 +70,8 @@ rowData(sce) <- rownames(sce)
 Following the scater workflow, generate histograms or density plots of (a) the total number of UMI counts per cell and (b) total number of expressed genes. (1pt plus 1pt extra-credit if you generate the plots with ggplot2).  
 ```{r}
 per.cell <- perCellQCMetrics(as.matrix(assay(sce, "counts")), subsets = list(Mito = grep("^mt", ignore.case = T, rownames(sce) )))
+
+#plot(sort(log(per.cell$sum)))
 
 ggplot(per.cell%>%data.frame())+
   geom_density(aes(sum))+
@@ -111,88 +114,226 @@ gridExtra::grid.arrange(p1, p2, ncol = 2)
 ###Decide on some threshold for either QC parameter and remove the corresponding cells. (1pt)  
 ```{r, warning=F, message=F}
 ### filtering low quality assay
-reasons <- quickPerCellQC(per.cell, percent_subsets=c("subsets_Mito_percent", "detected", "sum"))
-sce$discard <- reasons$discard
-colData(sce) <- cbind(colData(sce), per.cell)
+#reasons <- quickPerCellQC(per.cell, percent_subsets=c("subsets_Mito_percent"))
+#sce$discard <- reasons$discard
+#colData(sce) <- cbind(colData(sce), per.cell)
 #sum(reasons$discard)
-plot(per.cell$detected, per.cell$subsets_Mito_percent, col = ifelse(reasons$discard, "red", "black"),
-     main = "visualize outlier by quickPerCellQC()")
-
-filtered <- as.matrix(assay(sce, "counts"))[, !sce$discard]
-filtered_sce <- sce[,!sce$discard]
-
-
-#libsize.drop <- isOutlier(per.cell$sum, nmads=3, type="higher", log=F)
-#feature.drop <- isOutlier(per.cell$detected, nmads=3, type="lower", log=F)
-#mito.drop <- isOutlier(per.cell$subsets_Mito_percent, nmads=3, type="higher")
-#sce$discard <- (libsize.drop | feature.drop | mito.drop )
-#plot(per.cell$detected, per.cell$subsets_Mito_percent, col = ifelse(sce$discard, "red", "black"),
+#plot(per.cell$detected, per.cell$subsets_Mito_percent, col = ifelse(reasons$discard, "red", "black"),
 #     main = "visualize outlier by quickPerCellQC()")
 
+
+libsize.drop <- isOutlier(per.cell$sum, nmads=3, type="higher", log=T)
+feature.drop <- isOutlier(per.cell$detected, nmads=3, type="lower", log=T)
+mito.drop <- isOutlier(per.cell$subsets_Mito_percent, nmads=3, type="higher")
+sce$discard <- (libsize.drop | feature.drop | mito.drop )
+plot(per.cell$detected, per.cell$subsets_Mito_percent, col = ifelse(sce$discard, "red", "black"),
+     main = "visualize outlier by quickPerCellQC()")
+sce <- sce[,!sce$discard]
+filtered <- as.matrix(assay(sce, "counts"))
 ```
 
 ###Using the filtered data set, normalize the counts using scran and scater and judge whether the size factors calculated by computeSumFactors show the expected behavior as shown in Figure 6 of the simpleSingleCell workflow. (1pt)  
-```{r}
+```{r, message=F, warning=F}
 #sum(nexprs(filtered, byrow=TRUE) == 0 )
 keep_feature <- nexprs(filtered, byrow=TRUE) > 0
-filtered_sce <- filtered_sce[keep_feature,]
+sce <- sce[keep_feature,]
 #dim(example_sce)
-filtered_sce <- logNormCounts(filtered_sce, name = "scater")
+sce <- logNormCounts(sce, name = "scater")
 
 
-clusters <- quickCluster(filtered_sce)
-summary(sizeFactors(sce))
-filtered_sf <- computeSumFactors(as.matrix(assay(filtered_sce, "counts")), clusters=clusters, assay.type = "SingleCellExperiment")
-filtered_sce <- logNormCounts(filtered_sce, name = "scran", size_factors = filtered_sf)
+clusters <- quickCluster(sce)
+#summary(sizeFactors(sce))
+filtered_sf <- computeSumFactors(as.matrix(assay(sce, "counts")), clusters=clusters, assay.type = "SingleCellExperiment")
+sce <- logNormCounts(sce, name = "scran", size_factors = filtered_sf)
 
 
-assay(filtered_sce, "scran")%>%
-  cbind.data.frame(RS = rowSums(assay(filtered_sce, "scran"))) %>%
+assay(sce, "scran")%>%
+  cbind.data.frame(RS = rowSums(assay(sce, "scran"))) %>%
   dplyr::arrange(desc(RS))%>%
   head(3)%>%
-  rbind.data.frame(Log_seq_depth = assay(filtered_sce, "scran")%>%colSums()%>%log())%>%
+  rbind.data.frame(Log_seq_depth = assay(sce, "scran")%>%colSums()%>%log())%>%
   data.table::transpose()%>%
   tidyr::gather(-V4, key = "gene", value = "expression")%>%
   ggplot(aes(V4, log(expression), color = gene))+
   geom_point()+
   geom_smooth(method = "lm")+
   ylim(c(0,4))+
-  theme_bw() -> p1
+  theme_bw()+
+  ggtitle("scran-hclustSizeFactor")-> p1
   
 
-assay(filtered_sce, "scater")%>%
-  cbind.data.frame(RS = rowSums(assay(filtered_sce, "scater"))) %>%
+assay(sce, "scater")%>%
+  cbind.data.frame(RS = rowSums(assay(sce, "scater"))) %>%
   dplyr::arrange(desc(RS))%>%
   head(3)%>%
-  rbind.data.frame(Log_seq_depth = assay(filtered_sce, "scater")%>%colSums()%>%log())%>%
+  rbind.data.frame(Log_seq_depth = assay(sce, "scater")%>%colSums()%>%log())%>%
   data.table::transpose()%>%
   tidyr::gather(-V4, key = "gene", value = "expression")%>%
   ggplot(aes(V4, log(expression), color = gene))+
   geom_point()+
   geom_smooth(method = "lm")+
   ylim(c(0,4))+
-  theme_bw() -> p2
+  theme_bw()+
+  ggtitle("scater-globalSizeFactor") -> p2
 
-gridExtra::grid.arrange(p1, p2, ncol = 2)
+
+#SCnorm
+cd <- rep(1, 1077)
+#plotCountDepth(sce, Conditions = cd)
+sce <- SCnorm(sce, Conditions = cd, PrintProgressPlots = F)
+
+assay(sce, "normcounts")%>%
+  cbind.data.frame(RS = rowSums(assay(sce, "normcounts"))) %>%
+  dplyr::arrange(desc(RS))%>%
+  head(3)%>%
+  rbind.data.frame(Log_seq_depth = assay(sce, "normcounts")%>%colSums()%>%log())%>%
+  data.table::transpose()%>%
+  tidyr::gather(-V4, key = "gene", value = "expression")%>%
+  ggplot(aes(V4, log(expression), color = gene))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ylim(c(0,4))+
+  theme_bw()+
+  ggtitle("SCnorm-Quantilereg") -> p3
 
 ```
 
+
+*can you please comment on:: running cluster prior to calculate size factor doesnt seems to be different from global size factor calculation might imply that the cell phenotypes are relatively homogenuous, SCnorm over correct the association with sequencing depth in this case then, the in class slids suggested otherwise it seems? or just scran and scnorm works mainly for intra assay normalization*  
+
 ###How can you access the normalized data matrix? (0.5pt)  
-```{r, eval=F}
-assayNames(filtered_sce)
+```{r}
+assayNames(sce)
 ```
 
 ###2. scRNA-seq data wrangling in R using Seurat. (8.5pts)  
 ###Seurat can be installed via the usual install.packages routine.  
 
-Create a Seurat object. (1pt)
-Perform the same filtering that you chose to do on the SCE object. (1pt)
-Normalize the data using scTransform (1pt)
-How can you access the normalized data matrix, i.e. the matrix of Pearson residuals? (0.5pts)
-For the first 10 cells, do pairwise comparisons for each cell of the normalized values from the Seurat object and the SCE object (scatter plots are fine; you may want to check out the GGally package, specifically the ggpairs function. We also recommend to remove genes that have zero counts in all the samples). Explain what you see. (2pts)
-What is the difference between the function implemented in scTransform and the integration routine that is described here and by Stuart et al.? (1pt  
+###Create a Seurat object. (1pt)  
+```{r}
+Sobj <- CreateSeuratObject(counts = Count_Matrix)
+```
 
-###3. Final question: what types of cells do you think you’re looking at? (1pt + 1 extra-credit point)
-Hint: It is a fairly homogeneous population, i.e. all cells would probably be called the same cell name where cell name would be something like “skin cell”. Explain your reasoning!
+###Perform the same filtering that you chose to do on the SCE object. (1pt)  
 
-The point is for your reasoning, there will be an extra-credit point if you identify the cell type correctly.
+```{r, warning=F, message=}
+Sobj[["percent.mt"]] <- PercentageFeatureSet(Sobj, pattern = "^MT")
+#VlnPlot(Sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(Sobj, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(Sobj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+gridExtra::grid.arrange(plot1, plot2, ncol = 2)
+
+Sobj <- subset(Sobj, subset = nFeature_RNA > 500 & nFeature_RNA < 3000 & percent.mt < 20)
+#VlnPlot(Sobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+```
+
+###Normalize the data using scTransform (1pt)  
+```{r}
+Sobj <- NormalizeData(Sobj)
+```
+
+###How can you access the normalized data matrix, i.e. the matrix of Pearson residuals? (0.5pts)  
+```{r, eval=FALSE}
+Sobj@assays$RNA@data
+```
+
+
+```{r, warning=F, message=F}
+Sobj@assays$RNA@data%>%
+  cbind.data.frame(RS = rowSums(Sobj@assays$RNA@data)) %>%
+  dplyr::arrange(desc(RS))%>%
+  head(3)%>%
+  rbind.data.frame(Log_seq_depth = Sobj@assays$RNA@data %>%colSums()%>%log())%>%
+  data.table::transpose()%>%
+  tidyr::gather(-V4, key = "gene", value = "expression")%>%
+  ggplot(aes(V4, log(expression), color = gene))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ylim(c(0,4))+
+  theme_bw()+
+  ggtitle("Seurat-NBnormalize")->p4
+
+
+gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+###For the first 10 cells, do pairwise comparisons for each cell of the normalized values from the Seurat object and the SCE object (scatter plots are fine; you may want to check out the GGally package, specifically the ggpairs function. We also recommend to remove genes that have zero counts in all the samples). Explain what you see. (2pts)  
+```{r, warning=F, message=F}
+
+#common cell idx
+#Sobj@assays$RNA@data@Dimnames[[2]][cidx]
+cidx <- colnames(assay(sce, "scater")) %in% Sobj@assays$RNA@data@Dimnames[[2]][2:11]
+cidx <- sort(Sobj@assays$RNA@data@Dimnames[[2]][cidx])
+length(cidx)
+
+#common feature idx
+commS_nonZero <- Sobj@assays$RNA@data@Dimnames[[1]][which(rowSums(Sobj@assays$RNA@data[, cidx]) != 0)]
+length(commS_nonZero)
+commRc <- rownames(assay(sce, "scater"))[which(rownames(assay(sce, "scater")) %in% commS_nonZero)]
+commS_nonZero <- Sobj@assays$RNA@data@Dimnames[[1]][which(Sobj@assays$RNA@data@Dimnames[[1]] %in% commRc)]
+
+
+st <- data.frame(geneid = commS_nonZero,
+           Sobj@assays$RNA@data[commS_nonZero, cidx]) 
+#st$method = rep("seurat", nrow(st))
+
+sc <- data.frame(geneid = commS_nonZero,
+                 assay(sce, "scater")[commS_nonZero , cidx])
+sd <- data.frame(geneid = commS_nonZero,
+                 assay(sce, "scran")[commS_nonZero , cidx])
+se <- data.frame(geneid = commS_nonZero,
+                 assay(sce, "normcounts")[commS_nonZero , cidx])
+
+#sc$method = rep("scater", nrow(sc))
+
+df1 <- cbind.data.frame(seurat = unlist(st[2:11]),
+                        scater = unlist(sc[2:11]),
+                        scran = unlist(sd[2:11]),
+                        scnorm = unlist(se[2:11]),
+                        sample = rep(colnames(st)[2:11], each = nrow(st))) 
+
+
+GGally::ggpairs(df1, 1:4, mapping = ggplot2::aes(color = sample))
+```
+*two packages workflow filtered dataset differently. scaret outlier is set by standard dev from the mean; threshod in Seurat is more like setting by eye-balling, though it appears to correct the bias caused by depth difference*  
+
+###What is the difference between the function implemented in scTransform and the integration routine that is described here and by Stuart et al.? (1pt   
+
+scTransform model the expression of each gene as a negative binomial random variable with a mean that depends on other variables. observed UMI is transferd as of dispersion. it generated new assay slot with data that with variance stabalization.  
+
+###3. Final question: what types of cells do you think you’re looking at? (1pt + 1 extra-credit point)   
+Hint: It is a fairly homogeneous population, i.e. all cells would probably be called the same cell name where cell name would be something like “skin cell”. Explain your reasoning!  
+The point is for your reasoning, there will be an extra-credit point if you identify the cell type correctly.  
+```{r, warning=F, message=F}
+gemean <- Sobj@assays$RNA@data %>%
+  rowSums() %>%
+  sort(decreasing = T) 
+
+top50 <- head(gemean, n = 50)
+tail10 <- tail(gemean, n = 10)
+
+df2 <- data.frame(geneid = c(names(top10), names(tail10)),
+                  meanGE = c(top10, tail10))%>%
+  mutate(geneid = fct_reorder(df2$geneid, df2$meanGE))
+
+
+ggplot(df2)+
+  geom_bar(aes(y = meanGE, x = geneid), stat = "identity")+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+library(hpar)
+data(hpaNormalTissue)
+names(hpaNormalTissue)
+
+gf <- data.frame(Gene.name = hpaNormalTissue$Gene.name[which(hpaNormalTissue$Gene.name %in% names(top50))])
+
+queryreslt <- 
+  gf %>%
+  left_join(hpaNormalTissue, by = "Gene.name")
+
+table(queryreslt$Cell.type)%>%
+  data.frame()%>%
+  arrange(desc(Freq))%>%
+  head(10)
+
+```
+based on summarization of mean gene expression of the normalized data. the genes are sorted by decreasing order of mean expression. the gene id is queried from  Human Protein Atlas R package. Cell type is matched with the top 500 most expressed genes. contengency table is generated by possible matatching cell types Grandular cells got the most hits.  
