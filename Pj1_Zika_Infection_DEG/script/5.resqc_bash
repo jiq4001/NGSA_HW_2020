@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=idx
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=40G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error
+#SBATCH --out=/athena/angsd/scratch/jiq4001/out
+
+
+cwd=/athena/angsd/scratch/jiq4001/Pj1
+genmbed=/athena/angsd/scratch/jiq4001/Pj/hg38.trf.bed
+mkdir {cwd}/QC_Star_align
+qc_dir={cwd}/QC_Star_align
+
+spack load -r py-rseqc
+spack load -r py-multiqc
+
+for file in $(ls ${cwd}/Star_align | egrep ".*.bam$")
+do
+read_distribution.py -i ${cwd}/Star_align/${file} -r ${genmbed} > ${qc_dir}/${file}.read_distribution.out
+
+geneBody_coverage.py -i ${cwd}/Star_align/${file} -r ${genmbed} -o ${qc_dir}/${file}.geneBody_coverage.out
+done
+
+mkdir {cwd}/multi_qc_Star_align
+cd {cwd}/multi_qc_Star_align
+multiqc ${qc_dir}

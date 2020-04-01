@@ -1,0 +1,86 @@
+Script content:
+
+requires: twoBitToFa from: http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/
+    $ wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa
+    $ chmod +x twoBitToFa
+    usage:
+       twoBitToFa input.2bit output.fa
+    options:
+       -seq=name       Restrict this to just one sequence.
+       -start=X        Start at given position in sequence (zero-based).
+       -end=X          End at given position in sequence (non-inclusive).
+       -seqList=file   File containing list of the desired sequence names 
+                   in the format seqSpec[:start-end], e.g. chr1 or chr1:0-189
+                   where coordinates are half-open zero-based, i.e. [start,end).
+       -noMask         Convert sequence to all upper case.
+       -bpt=index.bpt  Use bpt index instead of built-in one.
+       -bed=input.bed  Grab sequences specified by input.bed. Will exclude introns.
+       -bedPos         With -bed, use chrom:start-end as the fasta ID in output.fa.
+       -udcDir=/dir/to/cache  Place to put cache for remote bigBed/bigWigs.
+
+requires: genePredToGtf from: http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/
+    $ wget http://hgdownload.soe.ucsc.edu/admin/exe/macOSX.x86_64/genePredToGtf
+    $ chmod +x genePredToGtf
+    usage:
+       genePredToGtf database genePredTable output.gtf
+       If database is 'file' then track is interpreted as a file
+       rather than a table in database.
+    options:
+       -utr - Add 5UTR and 3UTR features
+       -honorCdsStat - use cdsStartStat/cdsEndStat when defining start/end
+        codon records
+       -source=src set source name to use
+       -addComments - Add comments before each set of transcript records.
+        allows for easier visual inspection
+
+Genome:  
+http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
+Annotation:  
+http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/  
+hg38.refGene.gtf.gz        10-Jan-2020 09:33   23M  
+hg38.trf.bed.gz - Tandem Repeats Finder locations, filtered to keep repeats
+    with period less than or equal to 12, and translated into UCSC's BED
+    format.
+
+$ wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
+$ ./twoBitToFa hg38.2bit hg38.fa
+
+$ ./genePredToGtf hg38 refGene refGene.gtf
+
+$ wget https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.trf.bed.gz
+
+
+dl_list.txt: 
+    list of 6 id names from rsa database 
+download_bash: 
+    takes <file of list of fast files> to <output directory> 
+    requires: sra-toolkit (sra-toolkit@2.8.2-1 *on system)   
+qc_bash:
+    run fastqc and multi-qc on <input file directory> attempt untrimmed sample first
+    store qc file in <QC> and <multi_qc>
+    requires:
+        py-multiqc (py-multiqc@1.7)
+        fastqc (fastqc@0.11.7)
+        trimgalore (trimgalore@0.4.5)
+Star_bash:
+    generate hg38genome index from hg38.fa; refGene.gtf; sjdbOverhang 149(sample 150bp)
+    requires:
+        star (star@2.7.0e)
+index_run_bash:
+    align sample fast file from <input directory> to <star_align> directory store as BAM SortedByCoordinate 
+    run samtool index on sorted bam
+    requires:
+       star (star@2.7.0e)
+       samtools (samtools@1.9%gcc@6.3.0)
+rseqc_bash:
+    run read_distribution and geneBody_coverage on flies in <input directory> to <QC_Star_align> directory
+    run multi-qc and store outcome in <multi_qc_Star_align>
+    requires:
+        py-rseqc (py-rseqc@2.6.4) 
+        py-multiqc (py-multiqc@1.7)
+readscount_bash:
+    run reads count on indexed bam files from <input directory> to output <reads_count> directory
+    requires: 
+        subread (subread@1.6.2)
+        genome bed format: hg38.trf.bed
+        

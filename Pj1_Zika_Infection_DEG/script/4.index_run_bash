@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=idx
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=40G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error
+#SBATCH --out=/athena/angsd/scratch/jiq4001/out
+
+spack load star@2.7.0e
+spack load samtools@1.9%gcc@6.3.0
+
+cwd=/athena/angsd/scratch/jiq4001/Pj1
+
+mkdir ${cwd}/Star_align
+sample_dir=${cwd}/test
+star_align=${cwd}/Star_align
+
+
+for file in $(ls ${sample_dir} | cut -b -11 | uniq -d)
+do
+STAR --runMode alignReads \
+--runThreadN 16 \
+--genomeDir ${cwd}/hg38_STARindex \
+--readFilesIn ${sample_dir}/${file}_1.fastq.gz ${sample_dir}/${file}_2.fastq.gz \
+--outFileNamePrefix ${star_align}/${file}. \
+--outSAMattributes NH HI AS nM MD \
+--twopassMode Basic \
+--readFilesCommand zcat \
+--outSAMtype BAM SortedByCoordinate
+done
+
+cd ${star_align}
+for file in $(ls | egrep ".*.bam")
+do  
+samtools index ${file}
+samtools flagstat ${file} >> ${file}_flagstat_out
+done

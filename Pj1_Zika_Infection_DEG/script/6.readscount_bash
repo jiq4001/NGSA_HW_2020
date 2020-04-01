@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=idx
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=40G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error
+
+spack load subread
+
+mkdir reads_count
+gtf=/athena/angsd/scratch/jiq4001/Pj/hg38.refGene.gtf
+cwd=/athena/angsd/scratch/jiq4001/Pj1
+sample_dir=${cwd}/Star_align  
+out_dir=${cwd}/reads_count
+
+
+featureCounts -a ${gtf} \
+-o ${out_dir}/featCounts_transcript_all.txt \
+--minOverlap 25 \
+-t "transcript" \
+-g "gene_id" \
+--primary \
+--tmpDir '/scratchLocal' \
+${sample_dir}/*.bam

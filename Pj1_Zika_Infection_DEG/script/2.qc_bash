@@ -1,0 +1,54 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=16
+#SBATCH --job-name=qc_bash
+#SBATCH --time=7-00:00:00
+#SBATCH --mem=40G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error 
+
+spack load fastqc
+spack load -r py-multiqc
+
+# set current work dir
+cwd=/athena/angsd/scratch/jiq4001/Pj1
+
+mkdir ${cwd}/QC
+mkdir ${cwd}/QC/non_trimed
+mkdir ${cwd}/multi_qc
+
+input_dir=${cwd}/test
+qc_dir=${cwd}/QC/non_trimed
+multi_qc=${cwd}/multi_qc
+
+### default no triming 
+if_trim=0
+
+if [ if_trim -eq 0 ]
+then
+    for file in $(ls ${input_dir} | cut -b -11 | uniq -d)
+    do
+        fastqc ${input_dir}/${file}_1.fastq.gz -o ${qc_dir} -t 16 --extract
+        fastqc ${input_dir}/${file}_2.fastq.gz -o ${qc_dir} -t 16 --extract
+    done
+    cd ${multi_qc}
+    multiqc ${qc_dir}
+else
+    mkdir ${cwd}/trimed
+    mkdir ${cwd}/QC/trimed
+    spack load -r trimgalore
+    trim_dir=${cwd}/trimed
+    qc_trim_dir=${cwd}/QC_trimed
+    
+    for file in $(ls ${input_dir} | cut -b -11 | uniq -d)
+    do
+        trim_galore \
+        --illumina --stringency 5 --length 30 --paired \
+        -o ${trim_dir} ${input_dir}/${file}_1.fastq.gz ${input_dir}/${file}_2.fastq.gz
+    
+        fastqc ${trim_dir}/${file}_1_val_1.fq.gz -o ${qc_trim_dir} -t 16 --extract
+        fastqc ${trim_dir}/${file}_2_val_2.fq.gz -o ${qc_trim_dir} -t 16 --extract
+    done
+    cd ${multi_qc}
+    multiqc ${qc_trim_dir}
+fi
+
