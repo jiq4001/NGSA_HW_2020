@@ -1,0 +1,13 @@
+Status	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244251.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244252.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244253.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244254.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244255.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align/SRR11244256.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align_1/SRR5319479.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align_1/SRR5319480.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align_1/SRR5319481.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align_1/SRR5319482.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align_1/SRR5319483.Aligned.sortedByCoord.out.bam	/athena/angsd/scratch/jiq4001/Pj1/Star_align_1/SRR5319484.Aligned.sortedByCoord.out.bam
+Assigned	83043043	73974832	67175579	65859774	70973302	64404765	42989816	48002316	40643961	50162647	61970101	68515587
+Unassigned_Unmapped	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MappingQuality	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_MultiMapping	26942416	32634176	24129802	29689658	21256982	23067272	9419454	9678548	7321350	9357386	13897384	16445598
+Unassigned_Secondary	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_Nonjunction	0	0	0	0	0	0	0	0	0	0	0	0
+Unassigned_NoFeatures	4601350	4264732	3638780	3822364	4029046	3667832	379962	425638	381342	458482	569239	598388
+Unassigned_Overlapping_Length	29412	32422	25062	26325	23737	21677	7206	7520	6351	7561	9337	10645
+Unassigned_Ambiguity	16782085	15535178	14092341	13807323	14062067	12964652	10211485	11370402	9703500	10883407	13272007	14403057

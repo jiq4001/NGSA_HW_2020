@@ -1,15 +1,14 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks=1 --cpus-per-task=16
-#SBATCH --job-name=idx
+#SBATCH --job-name=post_qc
 #SBATCH --time=7-00:00:00
 #SBATCH --mem=40G
-#SBATCH --error=/athena/angsd/scratch/jiq4001/error
-#SBATCH --out=/athena/angsd/scratch/jiq4001/out
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error_qc_post_align
 
 
 cwd=/athena/angsd/scratch/jiq4001/Pj1
-genmbed=/athena/angsd/scratch/jiq4001/Pj/hg38.trf.bed
+genmbed=/athena/angsd/scratch/jiq4001/Pj/Homo_sapiens.GRCh38.99.bed
 mkdir {cwd}/QC_Star_align
 qc_dir={cwd}/QC_Star_align
 

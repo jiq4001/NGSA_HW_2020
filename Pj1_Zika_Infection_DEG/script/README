@@ -1,53 +1,21 @@
 Script content:
 
-requires: twoBitToFa from: http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/
-    $ wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa
-    $ chmod +x twoBitToFa
-    usage:
-       twoBitToFa input.2bit output.fa
-    options:
-       -seq=name       Restrict this to just one sequence.
-       -start=X        Start at given position in sequence (zero-based).
-       -end=X          End at given position in sequence (non-inclusive).
-       -seqList=file   File containing list of the desired sequence names 
-                   in the format seqSpec[:start-end], e.g. chr1 or chr1:0-189
-                   where coordinates are half-open zero-based, i.e. [start,end).
-       -noMask         Convert sequence to all upper case.
-       -bpt=index.bpt  Use bpt index instead of built-in one.
-       -bed=input.bed  Grab sequences specified by input.bed. Will exclude introns.
-       -bedPos         With -bed, use chrom:start-end as the fasta ID in output.fa.
-       -udcDir=/dir/to/cache  Place to put cache for remote bigBed/bigWigs.
+####
+####
+Ensemble GTF Homo_sapiens.GRCh38.99.gtf
+ftp://ftp.ensembl.org/pub/release-99/gtf/homo_sapiens/
 
-requires: genePredToGtf from: http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/
-    $ wget http://hgdownload.soe.ucsc.edu/admin/exe/macOSX.x86_64/genePredToGtf
-    $ chmod +x genePredToGtf
-    usage:
-       genePredToGtf database genePredTable output.gtf
-       If database is 'file' then track is interpreted as a file
-       rather than a table in database.
-    options:
-       -utr - Add 5UTR and 3UTR features
-       -honorCdsStat - use cdsStartStat/cdsEndStat when defining start/end
-        codon records
-       -source=src set source name to use
-       -addComments - Add comments before each set of transcript records.
-        allows for easier visual inspection
+Esemble Fasta Momo_sapiens.GRCh38.dna_rm.primary_assembly.fa.gz
+ftp://ftp.ensembl.org/pub/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna_rm.primary_assembly.fa.gz
 
-Genome:  
-http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
-Annotation:  
-http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/  
-hg38.refGene.gtf.gz        10-Jan-2020 09:33   23M  
-hg38.trf.bed.gz - Tandem Repeats Finder locations, filtered to keep repeats
-    with period less than or equal to 12, and translated into UCSC's BED
-    format.
-
-$ wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
-$ ./twoBitToFa hg38.2bit hg38.fa
-
-$ ./genePredToGtf hg38 refGene refGene.gtf
-
-$ wget https://hgdownload.cse.ucsc.edu/goldenpath/hg38/bigZips/hg38.trf.bed.gz
+BED
+#not directly avaliable but converted from GFF3
+$wget ftp://ftp.ensembl.org/pub/release-99/gff3/homo_sapiens
+Require: gff3ToGenePred genePredToBed
+    $wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/genePredToBed
+    $wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/gff3ToGenePred
+    $ ../gff3ToGenePred -geneNameAttr=gene_name Homo_sapiens.GRCh38.99.gff3.gz stdout | sort -k2,2 -k4n,4n ->temp
+    $ ../genePredToBed temp Homo_sapiens.GRCh38.99.bed
 
 
 dl_list.txt: 
@@ -83,4 +51,19 @@ readscount_bash:
     requires: 
         subread (subread@1.6.2)
         genome bed format: hg38.trf.bed
-        
+
+dexseq_bash:
+    requires: matching Ensemble GTF (to generate GFF with unique transcript_id)  
+              dependency: py-htseq (py-htseq@0.9.1)
+              requires: dexseq_prepare_annotation.py(DEXSeq package)
+              $ python DEXSeq_python/dexseq_prepare_annotation.py Pj/Homo_sapiens.GRCh38.99.gtf Homo_sapiens.GRCh38.99.gff
+    sort bam file by name
+        requires: samtools (samtools@1.8)
+    run reads count of exon in bam file from <input directory> to output <txt> directory
+        dependency: py-pysam (py-pysam@0.13) for count.py to read BAM 
+        requires: dexseq_count.py (DEXSeq package)
+    
+
+    
+    
+    

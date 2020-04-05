@@ -3,13 +3,13 @@
 #SBATCH --ntasks=1 --cpus-per-task=16
 #SBATCH --job-name=idx
 #SBATCH --time=7-00:00:00
-#SBATCH --mem=40G
-#SBATCH --error=/athena/angsd/scratch/jiq4001/error_1
+#SBATCH --mem=60G
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error_star
 
-cwd=/athena/angsd/scratch/jiq4001
-genomfa=${cwd}/Pj/Hg38.fa/hg38.fa
-genomgtf=${cwd}/Pj/refGene.gtf
-out_dir=${cwd}/Pj1/hg38_STARindex
+cwd=/athena/angsd/scratch/jiq4001/Pj1
+genomfa=${cwd}/Homo_sapiens.GRCh38.ncrna.fa
+genomgtf=${cwd}/Homo_sapiens.GRCh38.99.gtf
+out_dir=${cwd}/hg38_STARindex
 
 spack load star@2.7.0e
 
@@ -18,5 +18,5 @@ STAR --runMode genomeGenerate  \
 --genomeDir ${out_dir}    \
 --genomeFastaFiles ${genomfa}  \
 --sjdbGTFfile ${genomgtf} \
---sjdbOverhang 149 
+--sjdbOverhang 149
 

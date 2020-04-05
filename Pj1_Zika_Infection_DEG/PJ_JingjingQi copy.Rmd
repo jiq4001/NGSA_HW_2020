@@ -1,7 +1,7 @@
 ---
-title: "PJ_ANGSD----Next Generation Sequencing Facilitates Quantitative Analysis of A549 Control and A549 infected with Zika virus Transcriptomes"
+title: "PJ_ANGSD"
 author: "JingjingQi"
-date: "2/13/2020"
+date: "4/3/2020"
 output: html_document
 ---
 
@@ -12,6 +12,7 @@ library(data.table)
 library(DESeq2)
 #BiocManager::install("org.Hs.eg.db")
 library("TxDb.Hsapiens.UCSC.hg38.knownGene")
+library(biomaRt)
 library(goseq)
 library(org.Hs.eg.db)
 ```
@@ -25,38 +26,44 @@ library(org.Hs.eg.db)
 
 ### Introduction  
 
-Zika virus (ZIKV) is an arthropod-borne virus(transmited by Arthropod) of the genus Flavivirus(with + sense ssRNA,  10–11kb in length). The recent ZIKV pandemic in theWestern Hemisphere was associatedwith a dramatic increase inmicrocephaly and other neurological deficits in the fetuses. In-vitro study on human fetal neural progenitors (hNPs) had shown that ZIKV replication persists in hNPs for at least 28 days.[1] hNPs can be differentiated into neurons, oligodendrocytes, or astrocytes. Human fetal astrocytes(HFAs) is the most abundant cell type in the central nervous system, they may function as composing the BBB, provision of nutrients to the neurons, maintenance of extracellular ion balance, and damage repair.[2] The research of this paper hypothesis that HFAs are reservoirs for ZIKV in the fetal brain that may contribute to the establishment of chronic brain infection and neurodevelopmental abnormalities.    
+Source paper: Human Fetal Astrocytes Infected with Zika Virus Exhibit Delayed Apoptosis and Resistance to Interferon: Implications for Persistence. *Daniel Limonta, Juan Jovel, Anil Kumar, et al.* Viruses 2018, 10, 646   
+
+Zika virus (ZIKV) is an arthropod-borne virus(transmited by Arthropod) of the genus Flavivirus(with + sense ssRNA,  10–11kb in length). The recent ZIKV pandemic in theWestern Hemisphere was associated with a dramatic increase in microcephaly and other neurological deficits in the fetuses. Viral kinetics study shown that in general, the half life of infected host cell is less than 10 hours.[1] Previous in-vitro study on human fetal neural progenitors (hNPs) had shown that ZIKV replication persists in hNPs for at least 28 days[2].  hNPs can be differentiated into neurons, oligodendrocytes, or astrocytes. Human fetal astrocytes(HFAs) is the most abundant cell type in the central nervous system, they may function widely as composing the BBB, provision of nutrients to the neurons, maintenance of extracellular ion balance, and damage repair.[3] The researcher of this paper speculated that HFAs possibly functioned as viral reservoirs (cell types or anatomical sites which shown more stable kinetic properties in persistence with replication-competent forms of the virus  than the main pool of actively replicating virus), that may contribute to the establishment of chronic brain infection and neurodevelopmental abnormalities.    
 
 ###Evidence:  
-HFAs permissive to ZIKV infection.    
-Low host cell apoptosis; Virus can thrive in the presence of a sustained cytokine antiviral response.    
-qrtPCR ZIKV genomes in persistently infected HFAs suggest that adaptive mutations were not required for establishing chronic infection.   
-RNAseq analyses of persistently infected cells revealed that ZIKV alters host gene expression in a manner that could affect developmental processes. *---------source of data is part of the main study ZIKV infected A549(Positive Control continuous human cell lines) vs non-infecte A549*    
+Point to prove: virus can enter the host cell, virus keep replicating maintain infective strength; host cell relatively sustained the virus stress.  
+HFAs is permissive to ZIKV infection.(TIM/TAM receptor titer/blockage--ZIKV pcr)    
+Low level of apoptosis in HFAs (flow cytometry, rnaseq, A549 control); Virus can thrive in the presence of a sustained cytokine antiviral response(IFN-stimulation, virus titer with rtPCR).    
+Adaptive mutations were not required for establishing chronic infection. (rtPCR cirus genome)   
+RNAseq analyses of persistently infected cells revealed that ZIKV alters host gene expression in a manner that could affect developmental processes.         
 
 ### Method  
 
 ###Samples 
 HFAs were obtained from 15 to 19-week aborted fetuses with written consent.    
-Positive Control: continuous human cell lines A549 cells overexpress AXL with high permissive property.       
-(HFAs were highly permissive to ZIKV infection, it is shown to be TIM/TAM receptor member AXL dependent.[3], A549 overexpress AXL, depending upon the donor, only 23–46% of HFAs exhibited detectable levels of this protein)   
+Positive Control: continuous human cell lines A549 cells overexpress AXL with high permissive property.    
+(HFAs were highly permissive to ZIKV infection, it is shown to be TIM/TAM receptor member AXL dependent.[4], A549 overexpress AXL, depending upon the donor, only 23–46% of HFAs exhibited detectable levels of this protein)   
 
 ###RNA Sequencing  
-RNA of A549 cells-infected with Zika virus and un-infected A549 cells was isolated using RNeasy mini kit (QIAGEN, Valencia, CA, USA). RNAseq libraries were constructed using a TruSeq RNA Sample Prep V2 Kit. mRNA profiles was generated by deep sequencing, in triplicate, using Illumina Hiseq4000. All samples passed QC without triming.  
+RNA of A549 cells-infected with Zika virus and un-infected A549 cells was isolated using RNeasy mini kit (QIAGEN, Valencia, CA, USA).     
+RNAseq libraries were constructed using a TruSeq RNA Sample Prep V2 Kit.     
+mRNA profiles was generated by deep sequencing, in triplicate, using Illumina Hiseq4000. All samples passed QC without triming.    
 
 ###Sequence Alignment and Gene Level Expression Quantification  
-Sequence alignment and quantification of gene and exon level expression was carried out using RNA-seq analytical pipeline see _appendex_. Pair end reads were aligned to the human genome build hg38.refGene using star(2.7.0e), Star alignReads command options: --alignIntronMin 20 --alignIntronMax 1000000 --twopassMode Basic. Subread(1.6.2e) was used to count the reads mapping to individual exons according to hg38.refGene annotations (10-Jan-2020). Gene level expression was normalized by DESeq2(3.10e) Bioconductor packages, using Relative Log Expression (RLE) assuming most genes are not DE, that is calculated as the median of the ratio for each gene of its read counts over its geometric mean across all samples account for sequencing depth and RNA composition of the sample.  
+Sequence alignment and quantification of gene and exon level expression was carried out using RNA-seq analytical pipeline see _appendex_ and _script folder with README_. Pair end reads were aligned to the human ensemble genome GRCh38.99 using star(2.7.0e), Star alignReads command options: --alignIntronMin 20 --alignIntronMax 1000000 --twopassMode Basic. Subread(1.6.2e) was used to count the reads mapping to individual exons according to hg38.refGene annotations (10-Jan-2020). DESeq2(3.10e) Bioconductor packages, is used to normalize gene readscount and gene differencial expression. DEXSeq(1.32.0) Bioconductor packages, is used to normalize exon readscount and transcriptomic differencial expression.
 
 
 ### Result  
 
-_table1._ Summary of average aligned reads count and average aligned reads percentage     
-```{r, class.output="scroll", echo=F}
+_Table1._ Summary of average aligned reads count and average aligned reads percentage     
+```{r, class.output="scroll", echo=F, warning=F, message=F}
 r_exon <- fread("data/featCounts_transcript_all.txt.summary.txt")
 #rename <- gsub(".Aligned.sortedByCoord.out.bam$", "", x = colnames(r_exon))
 #rename <- gsub("/athena/angsd/scratch/jiq4001/Pj1/Star_align/", "", x = rename)
 #colnames(r_exon) <- rename
-colnames(r_exon) <- c("Status", outer(c("Ctrl", "Infected"), c("Rep1", "Rep2", "Rep3"), paste))
-
+tname <- outer(c("ctrl", "infected"), c("rep1", "rep2", "rep3"), paste)
+tname <- outer(c("A549", "HFA"), c(tname[1,], tname[2,]), paste)
+colnames(r_exon) <- c("Status", tname[1, ], tname[2, c(4:6, 1:3)])
 r_exon %>%
   filter(Status %in% c("Assigned", "Unassigned_MultiMapping",
                        "Unassigned_NoFeatures", "Unassigned_Overlapping_Length",
@@ -68,13 +75,18 @@ r_exon %>%
 r_exon_meata %>%
   separate(sample, into = c("condition", "rep"))%>%
   group_by(Status) %>%
-  summarise(average_aligned_reads_count = mean(reads)%>%round(0),
-            average_aligned_percentage = mean(percent)%>%round(2)) %>%
+  summarise(average_aligned_readcount = mean(reads)%>%round(0),
+            average_aligned_percentage = mean(percent)%>%round(2),
+            sd_rc = sd(reads)%>%round(0),
+            sd_pc = sd(percent)%>%round(2)) %>%
+  #mutate(reads_count = paste0(average_aligned_rc, "+/-", sd_rc),
+  #          reads_percent = paste0(average_aligned_pc, "+/-", sd_pc))%>%
+  dplyr::select(Status, average_aligned_readcount, average_aligned_percentage)%>%
   kableExtra::kable()%>%
   kableExtra::kable_styling()
 ```
 
-The average aligned reads count and average aligned reads percentage of the 6 samples are summarized in _Table.1_. On average, 60.54% aligned reads are uniquely assigned, 26.21% aligned reads are with multi-mapping. 5.02% aligned reads are unassigned due to ambiguity, and less than 9% aligned reads are with no features or too short overlapping length. Individual reads count and percentage summary per sample is shown in the _Figure.1_.     
+The average aligned reads count and average aligned reads percentage of the 6 samples are summarized in _Table.1_. On average, 65.28% aligned reads are uniquely assigned, 18.56% aligned reads are with multi-mapping. 14.10% aligned reads are unassigned due to ambiguity, and less than 3% aligned reads are with no features or too short overlapping length. Individual reads count and percentage summary per sample is shown in the _Figure.1_.     
 
 ```{r, echo=F, warning=F, message=F}
 #### bar graph alternatime
@@ -100,7 +112,9 @@ ggpubr::ggarrange(p1, p2, common.legend = T, legend = "bottom")
 ```{r, class.output="scroll", echo=F, message=F, warning=F}
 # read data table
 rc0 <- read.table("data/featCounts_transcript_all.txt", header=TRUE, row.names = NULL)
-
+#rc1 <- read.table("~/Desktop/featCounts_transcript_all_1.txt", header=TRUE, row.names = NULL)
+#rc1 <- cbind(rc0, rc1[, 7:12])
+#write.table(rc1, file = "data/featCounts_transcript_all.txt",row.names = F)
 
 # trim extra text from colname
 names(rc0) <- gsub("X.athena.angsd.scratch.jiq4001.Pj1.Star_align.", "", names(rc0))
@@ -112,95 +126,192 @@ readcounts <- rc0[ , -c(1:6)]
 
 
 all <- readcounts
-namedf <- outer(c("Ctrl", "Infected"), c("Rep1", "Rep2", "Rep3"), paste)
-names(all) <- c(namedf[1,], namedf[2,])
-all_info <- DataFrame(condition = rep(c("Ctrl", "Infected"), each = 3),
+namedf <- c("Status", tname[1, ], tname[2, c(4:6, 1:3)])
+names(all) <- namedf[-1]
+all_info <- DataFrame(condition = c(rep(c("ctrl", "infected"), each = 3), rep(c("infected", "ctrl"), each = 3)),
+                      sample = rep(c("A549", "HFA"), each = 6),
                       row.names = names(all))
 
 
 # wrap reads, condation into object
 
-DESeq.all <- DESeqDataSetFromMatrix(countData = all, colData = all_info, design = ~ condition)
-
+DESeq.all <- DESeqDataSetFromMatrix(countData = all, colData = all_info, design = ~ condition + sample +  sample:condition)
+DESeq.HFA <- DESeq.all[, c(7:12)]
+DESeq.a <- DESeq.all[, c(1:6)]
+DESeq.HFA@design <- DESeq.a@design <- ~condition
 # normalization
 DESeq.all <- estimateSizeFactors(DESeq.all)
 log.norm.counts <- log2(counts(DESeq.all, normalized=TRUE) + 1)
 assay(DESeq.all, "log.norm.counts") <- log.norm.counts
 
+
+DESeq.HFA <- estimateSizeFactors(DESeq.HFA)
+log.norm.counts <- log2(counts(DESeq.HFA, normalized=TRUE) + 1)
+assay(DESeq.HFA, "log.norm.counts") <- log.norm.counts
+
+DESeq.a <- estimateSizeFactors(DESeq.a)
+log.norm.counts <- log2(counts(DESeq.a, normalized=TRUE) + 1)
+assay(DESeq.a, "log.norm.counts") <- log.norm.counts
+
 ```
-`
+
 Reads counts are normalized on per gene/sample bases with Deseq2 R package, followed by diffrencial expression analysis using GLM with NB distribution model.   
 
-To investigate the differencially expressed genes, multiple testing on normalized reads count at 0.05 significent level with each gene using glm with contrast model ~ condition(condition_Infected_vs_Ctrl).   
+To investigate the differencially expressed genes, multiple testing on normalized reads count at 0.05 significent level with each gene using glm with contrast $model = condition(Infected_{vs}Ctrl)$ in the subset of HFA and A549 reads count individually; and global differencially analysis is checked using $model =  sample + condition + condition:sample$ on the full reads counts dataset including HFA and A549.    
 
 ```{r, echo=F, message=F, warning=F}
 DESeq.all <- DESeq(DESeq.all)
+DESeq.HFA <- DESeq(DESeq.HFA)
+DESeq.a <- DESeq(DESeq.a)
 #resultsNames(DESeq.all)
+#resultsNames(DESeq.HFA)
 DESeq.all.result <- results(DESeq.all, independentFiltering = TRUE, alpha = 0.05,
-                             name = "condition_Infected_vs_Ctrl")
+                             name = "conditioninfected.sampleHFA")
 
+DESeq.all.result_HFA <- results(DESeq.HFA, independentFiltering = TRUE, alpha = 0.05,
+                             name = "condition_infected_vs_ctrl")
+#sum(row.names(DESeq.all.result_HFA) == "ENSG00000137166")
+#DESeq.all.result_HFA[row.names(DESeq.all.result_HFA) == "ENSG00000137166",]
+DESeq.all.result_a <- results(DESeq.a, independentFiltering = TRUE, alpha = 0.05,
+                             name = "condition_infected_vs_ctrl")
 #plotDispEsts(DESeq.all)
+#plotDispEsts(DESeq.HFA)
+#plotDispEsts(DESeq.a)
 ```
 
-6258, 29% genes are excluded from multiple testing. the mean read counts(normalized) of 1265 out of 21856 genes are different in the infected group than control gorup with adjusted p-value < 0.05. Heatmap of the mean normalized Counts is plotted for genes with adjusted p-value < 0.05 in _Figure.2_.     
-
+The HFAs sample, 3365 out of 27427 genes are differencially expressed in the infected group than control gorup. Heatmap of the mean normalized Counts is plotted for genes with adjusted p-value < 0.05 in _Figure.2_. A549 sample, which has 1227 out of 31066 nonzero genes are differencially expressed in infected condition compare to control with adjusted p-value < 0.05.         
+  
 ```{r, echo=F, message=F, warning=F, eval=F}
 summary(DESeq.all.result)
+summary(DESeq.all.result_HFA)
+summary(DESeq.all.result_a)
+
 table(DESeq.all.result$padj < 0.05)
+table(DESeq.all.result_HFA$padj < 0.05)
+
 hist(DESeq.all.result$padj)
 plotMA(DESeq.all.result, alpha = 0.05, main = "Test: p.adj.value < 0.05", ylim = c(-8,8))
 ```
-_Figure.2_. Heatmap of mean of Normalized Counts is plotted for genes with adjusted p-value < 0.05.      
+_Figure.2_. Heatmap of mean of Normalized Counts of DEgenes in HFAs with adjusted p-value < 0.05.    
 ```{r, echo=F, message=F}
-DESeq.all.result.sorted <- DESeq.all.result[order(DESeq.all.result$padj), ]%>% head(table(DESeq.all.result$padj < 0.05)[2])
-
-DE_gene <- DESeq.all@assays@data$log.norm.counts[rownames(DESeq.all.result.sorted),]
+DESeq.FHA.result.sorted <- DESeq.all.result_HFA[order(DESeq.all.result_HFA$padj), ]%>% head(table(DESeq.all.result_HFA$padj < 0.05)[2])
+#sum(row.names(DESeq.FHA.result.sorted) == "ENSG00000137166")
+DE_gene.HFA <- DESeq.HFA@assays@data$log.norm.counts[rownames(DESeq.FHA.result.sorted),]
 rowname_df <- data.frame(Condition = factor(rep(c("Ctrl", "Infected"), each = 3)), 
                          BioRep = factor(rep(c("Rep1", "Rep2", "Rep3"), 2)))
-rownames(rowname_df) <- colnames(DE_gene)
-pheatmap::pheatmap(DE_gene, scale = "row", annotation_col = rowname_df, show_rownames = F)
+rownames(rowname_df) <- colnames(DE_gene.HFA)
+
+DESeq.a.result.sorted <- DESeq.all.result_a[order(DESeq.all.result_a$padj), ]%>% head(table(DESeq.all.result_a$padj < 0.05)[2])
+
+pheatmap::pheatmap(DE_gene.HFA, scale = "row", annotation_col = rowname_df, show_rownames = F)
+```
+
+_Figure.3_ showed the Volcano plot of the Log2 fold change vs -Log10 adjusted P-value of DEgenes in HFA with adjusted p-value < 0.05. Compared to the control A549 cell line, in which 56 DEgenes showed at least more than log2 fold change, the HFA sample has 349 DEgenes showed at least log2 fold positive change and, 140 DEgenes showed at least log2 fold negative change.         
+      
+```{r, echo=F, message=F}
+### Genesymbol table query
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl") #,host = "useast.ensembl.org"
+#listAttributes(ensembl)
+id_merge <- getBM(attributes = c("ensembl_gene_id", "external_gene_name", "description", "ensembl_transcript_id"),
+                  filters = "ensembl_gene_id", values = row.names(DESeq.FHA.result.sorted), mart = ensembl)%>%data.frame()
+
+named_res.HFA <- DESeq.FHA.result.sorted%>%
+  data.frame()%>%
+  mutate(ensembl_gene_id = row.names(DESeq.FHA.result.sorted))%>%
+  merge.data.frame(id_merge %>% dplyr::select(-ensembl_transcript_id)%>%unique(), by = "ensembl_gene_id", all.x = T)
+
+named_res.a <- DESeq.a.result.sorted%>%
+  data.frame()%>%
+  mutate(ensembl_gene_id = row.names(DESeq.a.result.sorted))%>%
+  merge.data.frame(id_merge %>% dplyr::select(-ensembl_transcript_id)%>%unique(), by = "ensembl_gene_id", all.x = T)
 
 ```
-    
-_Figure.3_ showed the Volcano plot of the Log2 fold change vs -Log10 adjusted P-value is plotted for DEgenes with adjusted p-value < 0.05. Genes with more than 2 fold log change is colored in red. 56 DE genes showed at least more than log2 fold change, among which 54 are positive. Most of differencial expressed genes with more than log2 fold change in the infected condition are upregulated compare to control non-infected condition.        
       
-_Figure.3_ Volcano plot DEgenes with adjusted p-value < 0.05   
+_Figure.3_ Volcano plot DEgenes with adjusted p-value < 0.05 and Barplot of top 10 up and down regulated DEgenes.      
 ```{r, echo=F, warning=F, message=F}
 ### plot of DE genes aj-pvalue < 0.05
-plot(y = -log10(DESeq.all.result.sorted$padj), 
-     x = DESeq.all.result.sorted$log2FoldChange, 
-     col = ifelse(abs(DESeq.all.result.sorted$log2FoldChange) >= 2, "red", "black"),
-     xlab = "log2 fold change", ylab = "-log10 adjusted-p-value")
-abline(v = c(-2, 2), col = "red", lty = 2)
+named_res.HFA%>%
+  ggplot()+
+  geom_point(aes(log2FoldChange, -log10(padj), 
+                 color = ifelse(abs(log2FoldChange) >= 2, ">=2", "<")),
+             position = position_jitter(width = 0.1, height = 0.1))+
+  geom_vline(xintercept = c(2, -2), linetype="dashed", color = "red", size=0.5)+
+  labs(title = "HFA", x = "log2 fold change", y = "-log10 adjusted-p-value", color = "Absolute\nLog2FoldChange")+
+  theme_classic() ->p3
 
+named_res.a%>%
+  ggplot()+
+  geom_point(aes(log2FoldChange, -log10(padj), 
+                 color = ifelse(abs(log2FoldChange) >= 2, ">=2", "<")),
+             position = position_jitter(width = 0.1, height = 0.1))+
+  geom_vline(xintercept = c(2, -2), linetype="dashed", color = "red", size=0.5)+
+  labs(title = "A549", x = "log2 fold change", y = "-log10 adjusted-p-value", color = "Absolute\nLog2FoldChange")+
+  theme_classic() ->p4
 
-DESeq.all.result.sorted.gt2fc <-      DESeq.all.result.sorted[which(abs(DESeq.all.result.sorted$log2FoldChange) >= 2), ] %>%data.frame()
+#barplot top tail 10 by log2fold
+named_res.HFA%>%
+  filter(abs(log2FoldChange) >= 2) %>%
+  arrange(desc(log2FoldChange))%>%
+  mutate(order = 1:n()) %>%
+  filter(order %in% c(1:10, (nrow(.)-9):nrow(.)))%>%
+  mutate(order = factor(1:n()))->temp_HFA
+
+temp_HFA%>%
+  ggplot()+
+  geom_bar(aes(order, log2FoldChange, fill = ifelse(log2FoldChange > 0, "> 0", "< 0")), stat = "identity")+
+  scale_x_discrete(labels = temp_HFA$external_gene_name)+ 
+  labs(title = "HFA", x = "Gene Name", y = "Log2 fold change", fill = "Log2FoldChange")+
+  coord_flip()+
+  theme_classic()->p5
+
+named_res.a%>%
+  filter(abs(log2FoldChange) >= 2) %>%
+  arrange(desc(log2FoldChange))%>%
+  mutate(order = 1:n()) %>%
+  filter(order %in% c(1:10, nrow(.)))%>%
+  mutate(order = factor(1:n()))->temp
+
+temp%>%
+  ggplot()+
+  geom_bar(aes(order, log2FoldChange, fill = ifelse(log2FoldChange > 0, "> 0", "< 0")), stat = "identity")+
+  scale_x_discrete(labels = temp$external_gene_name)+ 
+  labs(title = "A549", x = "Gene Name", y = "Log2 fold change", fill = "Log2FoldChange")+
+  coord_flip()+
+  theme_classic()->p6
+
+ggpubr::ggarrange(p3, p4, p5, p6, common.legend = F, legend = "bottom")
+
+DESeq.FHA.result.sorted.gt2fc <- DESeq.FHA.result.sorted[which(abs(DESeq.FHA.result.sorted$log2FoldChange) >= 2), ] 
+
+#summary(DESeq.FHA.result.sorted.gt2fc$baseMean)
+#DESeq.FHA.result.sorted.gt2fc[ DESeq.FHA.result.sorted.gt2fc$baseMean == max(summary(DESeq.FHA.result.sorted.gt2fc$baseMean)),]
 ```
 
- 
+
+To explore the impact of Zika infection DE genes and their functional characteristics, Gene Ontology Term Enrichment Analysis is performed on HFA sample DEgene with adjusted p-value < 0.05 and with at least log2 fold changes. REVIGO Gene Ontology treemap is shown in _Figure.4_.         
 
 ```{r, echo=F, message=F, warning=F, eval=F}
-gene.vector <- ifelse(DESeq.all.result$padj < 0.05 & abs(DESeq.all.result$log2FoldChange) >= 2, 1, 0)
+gene.vector <- ifelse(DESeq.all.result_HFA$padj < 0.05 & abs(DESeq.all.result_HFA$log2FoldChange) >= 2, 1, 0)
 #sum(gene.vector, na.rm = T)
-names(gene.vector) <- rownames(DESeq.all.result)
+names(gene.vector) <- rownames(DESeq.all.result_HFA)
 gene.vector <- ifelse(is.na(gene.vector), 0, gene.vector)
 
 #glen <- rc0$Length
-glen <- getlength(rownames(DESeq.all.result), "hg38","geneSymbol")
+glen <- getlength(rownames(DESeq.all.result_HFA), "hg38","ensGene")
 #sum(gene.vector)
 #length(glen)
 #length(gene.vector)
+
 gid <- rownames(rc0)
 pwf <- nullp(gene.vector, id = gid, bias.data = glen)
-go.wall <- goseq(pwf,"hg38","geneSymbol", use_genes_without_cat=T)
+go.wall <- goseq(pwf,"hg38","ensGene", use_genes_without_cat=T)
 #go.gns <- getgo(rownames(DESeq.all.result), "hg38", "geneSymbol")%>%stack()
 idx <- p.adjust(go.wall$over_represented_pvalue,method="BH")<.05 | p.adjust(go.wall$under_represented_pvalue,method="BH")<.05
 go.wall <- go.wall[idx,]
 #write_csv(go.wall, "go.wall_1.csv")
-
-
 ```
-_Figure.4_ REVIGO Gene Ontology treemap of DEgene with at least log2 fold changes.        
+  
+  
 ```{r, echo=F, warning=F, message=F}
 source("revigo_r/REVIGO_treemap.r")  
 REVIGO_treemap <- function(revigo.data, col_palette = "Paired",
@@ -231,20 +342,167 @@ REVIGO_treemap <- function(revigo.data, col_palette = "Paired",
 }
 REVIGO_treemap(stuff)
 ```
-    
-To explore the impact of Zika infection DE genes and their functional characteristics, Gene Ontology Term Enrichment Analysis is performed. REVIGO Gene Ontology treemap of DEgene with adjusted p-value < 0.05 and with at least log2 fold changes is shown in _Figure.4_. Main sections of the Gene Ontology treemap are associated with 1: infection( term immune responses, response to other organism); 2: interferon singnaling path way and responses and response to stimulus; which is consistant with privious research and clinical observation of cytokin antivarius responses; 3: negative regulation of multi-organism process, which is interesting and also associated with the speculation that ZIKV host cell showed insufficient antivirus responses.    
+  
+_Figure.4_ REVIGO Gene Ontology treemap of DEgene with at least log2 fold changes in HFA.         
 
-```{r}
+Transcriptomic analysis is also performed using DEXSeq. 1421 transcripts are differencially expressed with adjusted p-value < 0.05, 309 transcripts are differencially expressed with at least log2 fold change, with 195 transcripts are upregualted and 114 are downregulated. Associated gene are summarized to associated with their ontology functions. List of Differencially expressed transcripts are also compared with the origional paper's result, correlation of fold change of commonly detected transcripts is checked. 145 transcripts are commonly detected (309 in our analysis, 803 in paper's result), the correlation of log2 fold change is 0.74 as shown in _Figure.5_ .         
 
+
+```{r, message=F, warning=F, echo=F}
+library(DEXSeq)
+countFiles = list.files("DEXSeq_TXT", pattern="*.txt$", full.names=TRUE)
+flattenedFile = list.files("DEXSeq_TXT", pattern="gff$", full.names=TRUE)
+sampleTable = data.frame(
+   row.names = namedf[8:13],
+   condition = rep(c("Infected", "Ctrl"), each = 3))
+#sampleTable = data.frame(
+#   row.names = namedf[-1],
+#   condition = c(rep(c("Ctrl", "Infected"), each = 3), rep(c("Infected", "Ctrl"), each = 3)),
+#   celltype = rep(c("A549", "HFA"), each = 6))
+#colData(dxd)
+
+dxd = DEXSeqDataSetFromHTSeq(
+   countFiles,
+   sampleData=sampleTable,
+   design= ~sample + exon + condition:exon,
+   flattenedfile=flattenedFile )
+#exon (‘this’) as well as the count data from the sum of the other exons belonging to the same gene (‘others’)
+dxd = estimateSizeFactors( dxd )
+dxd = estimateDispersions( dxd) 
+#default exons per gene mostly under 40 for human
+#>than maxexon or < mincount will cause NA
+dxd = testForDEU( dxd )
+dxd = estimateExonFoldChanges(dxd, fitExpToVar="condition")
+dxr1 = DEXSeqResults( dxd )
+rm_na <- dxr1[!is.na(dxr1$padj)& (dxr1$padj < 0.05), ]
+dxr1_df <- rm_na[(!is.na(rm_na$log2fold_Infected_Ctrl) & abs(rm_na$log2fold_Infected_Ctrl) >= 2) , ]%>% data.frame()
+#table(dxr1_df$log2fold_Infected_Ctrl>0)
+# paper claimed FOXP4 expression check
+#sum(gsub(":.*$", "", row.names(rm_na)) == "ENSG00000137166")
+#dxr1[gsub(":.*$", "", row.names(dxr1)) == "ENSG00000137166",]%>%data.frame()
+
+#plotDEXSeq( dxr1, "ENSG00000110446", expression=FALSE, splicing=TRUE,   legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 )
+#lapply(unique(query_degdf$groupID), function(x) plotDEXSeq( dxr1, x, expression=FALSE, splicing=TRUE,   legend=TRUE, cex.axis=1.2, cex=1.3, lwd=2 ))
 ```
 
+  
+```{r, echo=F, message=F, warning=F}
+paper_res <- readxl::read_xlsx("paper/Table S2, Proofreading Viruses, Nov16,2018.xlsx", sheet = 1, skip = 1)%>%
+  mutate(FoldChange_paper = log2(FoldChange))%>%
+  filter(pVal < 0.05 & FoldChange >= 2)
 
+DESeq.FHA.result.sorted.gt2fc$ens_gene <- row.names(DESeq.FHA.result.sorted.gt2fc)
+#is.element(DESeq.FHA.result.sorted.gt2fc$ens_gene, paper_res$ens_gene)%>%sum
+DESeq.FHA.result.sorted.gt2fc%>%
+  data.frame()%>%
+  dplyr::select(ens_gene, log2FoldChange) %>%
+  inner_join(paper_res %>% dplyr::select(FoldChange_paper, ens_gene, ext_gene)) ->com_df
+#sum(com_df$ens_gene == "ENSG00000137166")
+Cor = cor(com_df$log2FoldChange, com_df$FoldChange_paper) %>% round(3)
+Cor_label = paste0("cor = ", Cor)
+
+com_df %>% 
+  ggplot(aes(log2FoldChange, FoldChange_paper))+ 
+  geom_point()+
+  geom_text(aes(label = ext_gene), color = "red", alpha = 0.7)+
+  labs(x = "DEXSeq result", y = "Paper result(Kallisto)", title = "Commonly detected DEgens at transcrptomic level analysis")+
+  geom_smooth(method = "lm", formula = y ~ x, se = F)+
+  geom_hline(yintercept = 0, color = "black")+
+  geom_vline(xintercept = 0, color = "black")+
+  xlim(-5, 10)+
+  ylim(-1, 10)+
+  annotate("text", x = -2, y = 5, label = Cor_label, size = 7)+
+  theme(panel.border = element_blank(),
+        panel.background = element_blank())
+
+```
+  
+_Figure.5_ Log2 fold change of commonly detected transcripts of DEXSeq vs Kallisto(paper's)    
+
+```{r,eval=F, message=F, warning=F, echo=F}
+data.frame(groupID = dxr1_df$groupID)%>%
+  separate(groupID, into = c("t1", "t2", "t3", "t4", "t5", "t6")) %>%
+  gather()%>%
+  drop_na()->tem
+query_gene <- unique(tem$value)
+
+gene.vector <- ifelse(row.names(DESeq.all.result_HFA) %in% query_gene, 1, 0)
+#sum(gene.vector, na.rm = T)
+names(gene.vector) <- rownames(DESeq.all.result_HFA)
+gene.vector <- ifelse(is.na(gene.vector), 0, gene.vector)
+pwf <- nullp(gene.vector, id = gid, bias.data = glen)
+go.wall <- goseq(pwf,"hg38","ensGene", use_genes_without_cat=T)
+idx <- p.adjust(go.wall$over_represented_pvalue,method="BH")<.05 | p.adjust(go.wall$under_represented_pvalue,method="BH")<.05
+go.wall <- go.wall[idx,]
+#write_csv(go.wall, "go.wall_dex.csv")
+```
+
+Main and interactive effect of ZIKV infection on HFA and A549 is also checked. Differencially expressed genes in terms of interactive effect (condition:sample type) with adjusted p-value < 0.05. DEgenes with at least log2 fold change are pooled for GO analysis. GO treemap in apandex.        
+
+```{r, echo=F, message=F, warning=F, eval=F}
+DESeq.all.result.sorted <- DESeq.all.result[order(DESeq.all.result$padj), ]%>% head(table(DESeq.all.result$padj < 0.05)[2])
+
+DE_gene <- DESeq.all@assays@data$log.norm.counts[rownames(DESeq.all.result.sorted),]
+rowname_df <- data.frame(Condition = factor(c(rep(c("Ctrl", "Infected"), each = 3), rep(c("Infected", "Ctrl"), each = 3))), 
+                         BioRep = factor(rep(c("Rep1", "Rep2", "Rep3"), 4)))
+rownames(rowname_df) <- colnames(DE_gene)
+
+named_res.all <- DESeq.all.result.sorted%>%
+  data.frame()%>%
+  mutate(ensembl_gene_id = row.names(DESeq.all.result.sorted))%>%
+  merge.data.frame(id_merge, by = "ensembl_gene_id", all.x = T)
+named_res.all%>%
+  filter(abs(log2FoldChange) >= 2) %>%
+  arrange(desc(log2FoldChange))%>%
+  mutate(order = 1:n()) %>%
+#  filter(order %in% c(1:10, nrow(.)))%>%
+  mutate(order = factor(1:n()))->temp
+table(temp$log2FoldChange>0)
+#pheatmap::pheatmap(DE_gene, scale = "row", annotation_col = rowname_df, show_rownames = F)
+gene.vector <- ifelse(DESeq.all.result$padj < 0.05 & abs(DESeq.all.result$log2FoldChange) >= 2, 1, 0)
+#sum(gene.vector, na.rm = T)
+names(gene.vector) <- rownames(DESeq.all.result)
+gene.vector <- ifelse(is.na(gene.vector), 0, gene.vector)
+
+#glen <- rc0$Length
+glen <- getlength(rownames(DESeq.all.result), "hg38","ensGene")
+#sum(gene.vector)
+#length(glen)
+#length(gene.vector)
+gid <- rownames(rc0)
+pwf <- nullp(gene.vector, id = gid, bias.data = glen)
+go.wall <- goseq(pwf,"hg38","ensGene", use_genes_without_cat=T)
+#go.gns <- getgo(rownames(DESeq.all.result), "hg38", "geneSymbol")%>%stack()
+idx <- p.adjust(go.wall$over_represented_pvalue,method="BH")<.05 | p.adjust(go.wall$under_represented_pvalue,method="BH")<.05
+go.wall <- go.wall[idx,]
+#write_csv(go.wall, "go.wall_bc.csv")
+```
+
+### Disscussion:    
+
+Pseudo-aligned with Kallisto to GRCh38.81 on transcriptomic level was done in the origional paper. 722 transcripts were reported upregulated, while 81 transcripts were reported downregulated on average the of 3 donors, with ajdust-pvalue < 0.05 and greater than log2 fold change. In our analysis, we randomly picked one of the HFA samples out of the three, alignment was performed with STAR. At "gene level", 349 defferencially expressed genes showed greater than log2 fold positive change and, 140 DEgenes showed greater than log2 fold negative change with adjust-pvalue < 0.05. Total DEgenes count is inflated wish Kallisto aligner compared to STAR, as pseudo aligner failed to account for the position information of read fragments.   
+
+Trascriptomic level differencial analysis was also performed with DEXSeq, our analysis showed 195 transcripts are upregualted and 114 are downregulated in one donor with ajdust-pvalue < 0.05 and greater than log2 fold change. Compared with list of genes in the result of transcript analysis in the origional paper, only 145 genes are commonly detected. 74% correlation is shown between log2 fold change of those commonly detected genes.      
+
+OAS2 (encoded protein induced by interferons, results in viral RNA degradation and the inhibition of viral replication.) was mentioned in the paper as the most upregulated gene in response to ZIKV infection. In our analysis on gene level, OAS2 is also show as one of the top up regulated genes. RSAD2 CMPK2 IFI27 NRIR, cytokine activity associated genes were also consistantly shown as top upregulated genes as in the origional paper's result. Other than downregulation of Long non-coding genes, which had be suggested involving in various biological processes, including chromatin modification, cell differentiation, pre-mRNA transcription and splicing, and protein translation[5], our analysis found top genes: DCLK3, HEPACAM  (shown association with neurodegeneration[6,7,8]),  CCKBR (shown association with functional changes in neuronal sensitivity to peptidesp[9]) are shown most downregulated. However, FOXP4 gene (known involved in development of the central nervous system) was claimed to be mostly supressed according to the origional paper wasnt shown as a significent result in our analysis, neither at gene level nor transcriptomic level.    
+
+Gene Ontology analysis of HFA of our DEgenes largely shown association with antigen processing, response to other organism, regulation of proteolysis, regulation of cytokin production. They might corelated with HFA's are inate immune responses. Oncological function like  regulation of secretion by cell might be associated with virus production. Negative regulation of cell proliferation and cell death might associated with apotosis. Oncological function of our transcriptomic level differencial analysis showed association with IFN pathway, cellular metabolism, virus reproduction related activities, which agreed with gene level differencial analysis findings overall.        
+
+Interestingly, in the Gene Ontology analysis comparing HFA vs A549 control cell line in the infected condition, besides main sesction that associated with HFA function(tube development), HFA showed higher level of response to cytokine, regulatory response to immune effector process, and membrane pore forming associated activities. Also, HFA showed positive regulation of cell proleforation compare to A549, which is cosistant with the experiment observation that lower apoptosis was shown in HFA than in A549.    
+
+Overall, our RNAseq analysis did support arguments that HFA shown antivral responses in upregulation of genes associated with cytokin production; host cell supports virus production in upregulation of genes associated with cellular activity; and morderate host cell apoptosis in upregulation of celldeath but less extreme than A549 cell lines. We did find ZIKV infection induced downregulation of genes that associated with neurodevelopmental abnormalities. Our analysis did support the main arguments that HFA could serve as viral reservoirs in KIKV infection, that may contribute to the establishment of chronic brain infection and neurodevelopmental abnormalities.             
 
 ###Reference:    
-1. Western Zika Virus in Human Fetal Neural Progenitors Persists Long Term with Partial Cytopathic and Limited Immunogenic Effects
-*Natasha W. Hanners, Jennifer L. Eitson, Noriyoshi Usui, et.al.* Cell Rep. 2016 Jun 14; 15(11): 2315–2322.    
-2. Brain Metastases from Primary Tumors Epidemiology, Biology, and Therapy 2015, Pages 191-202    
-3. AXL-dependent infection of human fetal endothelial cells distinguishes Zika virus from other pathogenic flaviviruses, *Audrey Stéphanie Richard, Byoung-Shik Shim, Young-Chan Kwon*, PNAS February 21, 2017 114 (8) 2024-2029.      
+1. Zika plasma viral dynamics in nonhuman primates provides insights into early infection and antiviral strategies *Katharine Best, Jeremie Guedj, Vincent Madelain*, PNAS, 15, 2017 114 (33) 8847-8852.    
+2. Western Zika Virus in Human Fetal Neural Progenitors Persists Long Term with Partial Cytopathic and Limited Immunogenic Effects
+*Natasha W. Hanners, Jennifer L. Eitson, Noriyoshi Usui, et.al.* Cell Rep. 2016, 14; 15(11): 2315–2322.    
+3. Brain Metastases from Primary Tumors Epidemiology, Biology, and Therapy. 2015,191-202    
+4. AXL-dependent infection of human fetal endothelial cells distinguishes Zika virus from other pathogenic flaviviruses, *Audrey Stéphanie Richard, Byoung-Shik Shim, Young-Chan Kwon*, PNAS February 21, 2017 114 (8) 2024-2029.      
+5. Long Non-Coding RNAs: Emerging and Versatile Regulators in Host–Virus Interactions, *Xing-Yu Meng,1 Yuzi Luo,1 Muhammad Naveed Anwar*,Front Immunol. 2017; 8: 1663.  
+6. The striatal kinase DCLK3 produces neuroprotection against mutant huntingtin. *Galvan L, Francelle L, Gaillard MC*, Brain. 2018 May 1;141(5):1434-1454   
+7. HepaCAM associates with connexin 43 and enhances its localization in cellular junctions, *Meihui Wu, Mei Chung Moh & Herbert Schwarz*, Scientific Reports, 6, 36218, 2016      
+8. Complement C7 is a novel risk gene for Alzheimer's disease in Han Chinese, *Deng-Feng Zhang, Yu Fan, Min Xu*, National Science Review, Volume 6, Issue 2, March 2019, Pages 257–274    
+9. Activation of a nerve injury transcriptional signature in airway-innervating sensory neurons after lipopolysaccharide induced lung inflammation. *Melanie Maya Kaelberer, Ana Isabel Caceres, Sven-Eric Jordt*, bioRxiv. 26, 2019.    
 
 
 ###Appendex:  
@@ -258,11 +516,7 @@ https://www.ncbi.nlm.nih.gov/bioproject/PRJNA610552
 
 ###Record:   
 Genome:  
-http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit  
-Annotation:  
-http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/  
-hg38.refGene.gtf.gz        10-Jan-2020 09:33   23M  
-hg38.trf.bed.gz 
+Ensemble GRCh38.99.gtf
 
 genomeGenerate: --sjdbOverhang 149  
 alignReads: --alignIntronMin 20 --alignIntronMax 1000000 --twopassMode Basic  
@@ -286,12 +540,31 @@ Samples prepared by poly-A protocol showed higher duplication level, which is ex
 ![](Graph/Gene_Body_Cover.png){width=400px}
 ![](Graph/Reads_Distribution.png){width=400px}  
 
-###Diagnositic plot of Deseq2 fit    
-gene-wise estimates congerge towards the fitted estimates, not many outliers is highlighted.  
+###Diagnositic plot of model fit    
+gene-wise estimates congerge towards the fitted estimates, not many outliers is highlighted.   
 ```{r, echo=F}
-plotDispEsts(DESeq.all)
+cat("DESeq-HFA/A549 ~condition+celltype+condition:celltype")
 summary(DESeq.all.result)
+
 ```
+```{r, echo=F}
+cat("DESeq-HFA ~condition")
+summary(DESeq.all.result_HFA)
+```
+```{r, echo=F}
+par(mfrow = c(1, 3))
+plotDispEsts(DESeq.all, main = "DESeq-HFA/A549 ~condition+celltype+condition:celltype")
+plotDispEsts(DESeq.HFA, main = "DESeq-HFA ~condition")
+plotDispEsts( dxd , main = "DEXSeq-HFA ~condition")
+```
+
+### REVIGO Gene Ontology treemap of DEgene with at least log2 fold changes of infection on HFA vs A549.       
+```{r, echo=F,message=F, warning=F}
+source("revigo_r/REVIGO_treemap_bc.r")  
+REVIGO_treemap(stuff)
+```
+
+
 ```{r}
 sessionInfo()
 ```

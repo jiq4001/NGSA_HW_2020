@@ -4,7 +4,7 @@
 #SBATCH --job-name=download
 #SBATCH --time=7-00:00:00
 #SBATCH --mem=30G
-#SBATCH --error=/athena/angsd/scratch/jiq4001/error_1
+#SBATCH --error=/athena/angsd/scratch/jiq4001/error_download
 
 spack load -r sra-toolkit@2.8.2-1
 
@@ -13,7 +13,7 @@ input=${cwd}/dl_list.txt
 mkdir ${cwd}/test
 deposit_dir=${cwd}/test
 
-for a in $(cat /athena/angsd/scratch/jiq4001/Pj1/${input})
+for a in $(cat ${input})
 do
- fastq-dump --split-files $a --outdir /athena/angsd/scratch/jiq4001/Pj1/${deposit_dir} --gzip
+ fastq-dump --split-files $a --outdir ${deposit_dir} --gzip
 done
