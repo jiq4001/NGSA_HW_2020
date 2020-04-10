@@ -11,15 +11,16 @@ cwd=/athena/angsd/scratch/jiq4001/Pj1
 genmbed=/athena/angsd/scratch/jiq4001/Pj/Homo_sapiens.GRCh38.99.bed
 mkdir {cwd}/QC_Star_align
 qc_dir={cwd}/QC_Star_align
+input_dir=Star_align
 
 spack load -r py-rseqc
 spack load -r py-multiqc
 
-for file in $(ls ${cwd}/Star_align | egrep ".*.bam$")
+for file in $(ls ${cwd}/${input_dir} | egrep ".*.bam$")
 do
-read_distribution.py -i ${cwd}/Star_align/${file} -r ${genmbed} > ${qc_dir}/${file}.read_distribution.out
+read_distribution.py -i ${cwd}/${input_dir}/${file} -r ${genmbed} > ${qc_dir}/${file}.read_distribution.out
 
-geneBody_coverage.py -i ${cwd}/Star_align/${file} -r ${genmbed} -o ${qc_dir}/${file}.geneBody_coverage.out
+geneBody_coverage.py -i ${cwd}/${input_dir}/${file} -r ${genmbed} -o ${qc_dir}/${file}.geneBody_coverage.out
 done
 
 mkdir {cwd}/multi_qc_Star_align

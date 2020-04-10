@@ -1,0 +1,36 @@
+---
+title: "HW_12"
+author: "JingjingQi"
+date: "4/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+```
+
+```{r, echo=F}
+data.frame(Feature = c("Pol ii presence",
+                       "open chromatin vs. repressed",
+                       "H3K4me3, H3K27ac, H3K4me1",
+                       "TF binding, e.g. p300",
+                       "CTCF binding",
+                       "chromosomal interactions",
+                       "DNA methylation"),
+           NGS_Assay = c("detecting transcripts (transcript production is dependent on Pol II!): RNA-seq, PRO-seq, GRO-seq; detecting Pol II itself: ChIP-seq",
+                         "detection promoters, gene bodies, enhancers, TFBS: RNA-seq, ATAC-seq, Chip-seq",
+                         "enhancers enriched around TSSs: ATAC-seq",
+                         "protein DNA binding: Chip-seq",
+                         "insulator binding: Chip-seq",
+                         "Hi-C, 3C, ChIA-PET",
+                         "WGBS, RRBS"))%>%
+  kableExtra::kable()%>%kableExtra::kable_styling()
+```
+###Why is ChIP-seq so much more costly and difficult than ATAC-seq?    
+Antibody is needed for enrichment of DNA bound to the protein of interest, needs large number of cells, protocal takes longer all aid up to the cost.  
+Antibody binding efficiency specifity might introduce bias.  
+Library bias towards shorter fragments, sonication or MNase digestion both might introduce bias.  
+
+###Why is it benefitial to combine information from RNA-seq, ChIP-seq and ATAC-seq experiments? What type of information can you gain from each experiment individidually – and why does it help to integrate them?    
+Able to answer refined questions in the same experiment, since chip-seq has higher noise ratio, the other two also helps to proof read. Identify chromatin accessibility, gene expression, and association with regulatory elements. 
