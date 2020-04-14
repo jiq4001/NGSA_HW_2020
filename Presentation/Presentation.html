@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Next Generation Sequencing Facilitates Quantitative Analysis of A549 Control and A549 infected with Zika virus Transcriptomes</title>
+  <title>Human Fetal Astrocytes Infected with Zika Virus Exhibit Delayed Apoptosis and Resistance to Interferon</title>
 
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
@@ -9,7 +9,6 @@
 
 
 
-  <meta name="date" content="2005-03-22" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,7 +19,7 @@
     var SLIDE_CONFIG = {
       // Slide settings
       settings: {
-                title: 'Next Generation Sequencing Facilitates Quantitative Analysis of A549 Control and A549 infected with Zika virus Transcriptomes',
+                title: 'Human Fetal Astrocytes Infected with Zika Virus Exhibit Delayed Apoptosis and Resistance to Interferon',
                         useBuilds: true,
         usePrettify: true,
         enableSlideAreas: true,
@@ -101,7 +100,6 @@ slide:not(.current) .plotly.html-widget{
       <h1 data-config-title><!-- populated from slide_config.json --></h1>
       <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
       <p data-config-presenter><!-- populated from slide_config.json --></p>
-            <p style="margin-top: 6px; margin-left: -2px;">March 22, 2005</p>
           </hgroup>
   </slide>
 
@@ -109,28 +107,24 @@ slide:not(.current) .plotly.html-widget{
 
 </article></slide><slide class=""><hgroup><h2>BackGround</h2></hgroup><article  id="background">
 
+<h3></h3>
+
+<pre >- Human Fetal Astrocytes Infected with Zika Virus Exhibit Delayed 
+  Apoptosis and Resistance to Interferon: Implications for 
+  Persistence. *Daniel Limonta, Juan Jovel, Anil Kumar, et al.* 
+  Viruses 2018, 10, 646.    </pre>
+
 <h3>Zika Virus</h3>
 
 <pre >- Arthropod-borne virus(transmited by Arthropod)    
-- Genus Flavivirus(+ sense ssRNA,  10–11kb in length)    </pre>
+- Genus Flavivirus(positive sense ssRNA,  10–11kb in length)    </pre>
 
 <h3>Previous study</h3>
 
 <pre >- in-vitro study had shown that ZIKV replication persists in human 
 fetal neural progenitors (hNPs) for at least 28 days    </pre>
 
-</article></slide><slide class=""><hgroup><h2>Paper of Source</h2></hgroup><article  id="paper-of-source">
-
-<h3>BackGround</h3>
-
-<pre >-  Human Fetal Astrocytes Infected with Zika Virus Exhibit Delayed 
-   Apoptosis and Resistance to Interferon: Implications for 
-   Persistence. *Daniel Limonta, Juan Jovel, Anil Kumar, et al.* 
-   Viruses 2018, 10, 646    
-    
-- hNPs can be differentiated into astrocytes. 
-- Human fetal astrocytes(HFAs) is the most abundant cell type in 
-  the central nervous system.    </pre>
+</article></slide><slide class=""><hgroup><h2>BackGround</h2></hgroup><article  id="background-1">
 
 <h3>Speculation</h3>
 
@@ -138,74 +132,81 @@ fetal neural progenitors (hNPs) for at least 28 days    </pre>
   to the establishment of chronic brain infection and 
   neurodevelopmental abnormalities.   </pre>
 
-</article></slide><slide class=""><hgroup><h2>Evidence:</h2></hgroup><article  id="evidence">
+<h3>Evidence:</h3>
 
 <pre >- HFAs is permissive to ZIKV infection.     
-- Low level of apoptosis in HFAs; sustained cytokine antiviral response.    
+- Low level of apoptosis in HFAs.      
 - qrtPCR ZIKV genomes suggest that adaptive mutations were not required.     
 - RNAseq analyses suggests that ZIKV alters host gene expression 
-  in a manner that could affect developmental processes.         </pre>
+  in a manner that could affect developmental processes.       
+  </pre>
 
-</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Methods</h2></hgroup><article  id="methods">
+</article></slide><slide class=""><hgroup><h2>Project Goal</h2></hgroup><article  id="project-goal">
+
+<pre >- To compare with the origional paper&#39;s result:    
+    - deregulation of genes affect morphogenesis, cell-substrate adherens 
+      junction assembly and focal adhesion assembly.     
+    - top upregulated genes associated are related with antiviral defense.    
+    
+- To find if there is gene level eveidence that support experiment 
+  observation of moderate apoptosis and inefficient antiviral response.</pre>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Method</h2></hgroup><article  id="method">
 
 </article></slide><slide class=""><hgroup><h2>Sample</h2></hgroup><article  id="sample">
 
 <pre >- HFAs were obtained from 15 to 19-week aborted fetuses.     
-- Positive Control: continuous human cell lines A549 cells overexpress AXL.   
-- Condition: infected with Zika virus and un-infected    
-- Replication: 3    </pre>
+- Positive Control: continuous human cell lines A549 cells 
+  overexpress AXL.   
+- Condition: infected with Zika virus and non-infected    
+- Replication: 3    
+- Total RNA isolated using RNeasy mini kit. 
+- RNAseq libraries prep: TruSeq RNA Sample Prep V2 Kit. 
+- Sequencer: Illumina Hiseq4000.  </pre>
 
 </article></slide><slide class=""><hgroup><h2>Bioinformatic</h2></hgroup><article  id="bioinformatic">
 
-<pre >- RNA isolation using RNeasy mini kit (QIAGEN, Valencia, CA, USA). 
-- RNAseq libraries prep: TruSeq RNA Sample Prep V2 Kit. 
-- Sequencer: Illumina Hiseq4000.  
-
-- QC: fastqc-all passed without trimming    
-- Genorme: Ensemble GRCh38.99
-- Alignment: Star default twopassMode    
-- Post QC: all passed    
-- DEseq     
-- DEXseq  </pre>
+<pre >- QC: fastqc-all passed without trimming    
+- Genorme: Ensemble GRCh38.99     
+- Alignment: Star default twopassMode      
+- Post QC: all passed     
+- DEseq      
+- DEXseq   </pre>
 
 </article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Result</h2></hgroup><article  id="result">
 
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section">
+</article></slide><slide class=""><hgroup><h2>Heatmap HFA infected vs non-infected</h2></hgroup><article  id="heatmap-hfa-infected-vs-non-infected">
 
-</article></slide><slide class=""><hgroup><h2>Alignment</h2></hgroup><article  id="alignment">
+<img width="700px" src='Presentation_files/Heatmap_1.png' title='fig:'/>
 
-</article></slide><slide class=""><hgroup><h2>DEseq</h2></hgroup><article  id="deseq">
+</article></slide><slide class=""><hgroup><h2>Volcano plot DEgenes HFA infected vs non-infected</h2></hgroup><article  id="volcano-plot-degenes-hfa-infected-vs-non-infected">
 
-</article></slide><slide class=""><hgroup><h2>GO Analysis</h2></hgroup><article  id="go-analysis">
+<img width="700px" src='Presentation_files/Volcano_1.png' title='fig:'/>
 
-</article></slide><slide class=""><hgroup><h2>DEXseq</h2></hgroup><article  id="dexseq">
+</article></slide><slide class=""><hgroup><h2>Gene Ontology treemap of DEgene with at least log2 fold changes in HFA</h2></hgroup><article  id="gene-ontology-treemap-of-degene-with-at-least-log2-fold-changes-in-hfa">
 
-</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Disscussion</h2></hgroup><article  id="disscussion">
+<img height="400px" width="700px," src='Presentation_files/GO.png' title='fig:'/>
 
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-1">
+</article></slide><slide class=""><hgroup><h2>Differential Expression of Genes infected-HFA vs infected-A549</h2></hgroup><article  id="differential-expression-of-genes-infected-hfa-vs-infected-a549">
 
-<pre >- OAS2 (encoded protein induced by interferons, results in viral RNA 
-degradation and the inhibition of viral replication.)  show as one of 
-the top up regulated genes, consistant with the origional paper.   
-- RSAD2 CMPK2 IFI27 NRIR, were also consistantly top upregulated as shown 
-in the origional paper result.   
-- Most of the downregulated genes in our analysis belong to the Long non-coding.   
-- P4 a transcription factor involved in development of the central nervous 
-system, claimed to be mostly supressed according to the origional paper 
-wasnt shown as a prominent result in our analysis.   </pre>
+<img height="400px" width="800px," src='Presentation_files/DEg_2.png' title='fig:'/>
 
-</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-2">
+</article></slide><slide class=""><hgroup><h2>Genes Differential Use of Exon infected-HFA vs infected-A549</h2></hgroup><article  id="genes-differential-use-of-exon-infected-hfa-vs-infected-a549">
 
-<pre >- Main sections of the Gene Ontology treemap of HFA(infection vs control) 
-associated to inate immune responses, virus proteolyis and antigen processing, 
-cytokine production, as well as virus production. 
-Negative regulation of cell proliferation and cell death related genes are 
-also shown in the treemap, but not as a main sections.  
-- Interestingly, in the Gene Ontology treemap of HFA vs A549 control cell line in the infected condition,  
-HFA compared to A549 showed higher level of response to cytokine, 
-regulatory response to immune effector process, and membrane associated activities. 
-HFA showed positive regulation of cell proleforation compare to A549, 
-which is cosistant with the experiment observation of lower apoptosis.    </pre>
+<img height="400px" width="700px," src='Presentation_files/Dexseq_Infected_HFAvsA549%20copy.png' title='fig:'/>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Conclusion</h2></hgroup><article  id="conclusion">
+
+</article></slide><slide class=""><hgroup><h2>Conclusion</h2></hgroup><article  id="conclusion-1">
+
+<pre >- RNA seq analysis did support arguments that HFA shown upregulation of 
+  genes associated with defense response to virus, response to cytokine.   
+  
+- Differential Expression of Exons associated with neuron morphology
+  development.     
+  
+- Differential use of exons in genes associated with regulation of 
+  cell proliferation/death, which warrant the need of further research.</pre>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article ></article></slide>
 
