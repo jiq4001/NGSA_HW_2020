@@ -29,9 +29,9 @@ Source paper: Human Fetal Astrocytes Infected with Zika Virus Exhibit Delayed Ap
 ###Project Goal    
 
 Perform bioinformatic analysis to compare with the result with the origional paper's result that in HFA samples    
-1, deregulation of genes affect morphogenesis, cell-substrate adherens junction assembly and focal adhesion assembly;     
-2, top upregulated genes identified are related with antiviral defense;     
-3, to find if theres gene level eveidence that support experiment observation of moderate apoptosis and inefficient antiviral response in HFA compared to control A549.    
+1.Whether there is deregulation of genes that affect morphogenesis and cell adhesion;     
+2.Whether the top upregulated genes associated are associated with antiviral defense;     
+3.To find if theres is eveidence that support experiment observation of moderate apoptosis and inefficient antiviral response in HFA compared to control A549.    
 
 ### Introduction  
 
@@ -202,8 +202,12 @@ DESeq.all.result <- results(DESeq.all, independentFiltering = TRUE, alpha = 0.05
 
 DESeq.all.result_HFA <- results(DESeq.HFA, independentFiltering = TRUE, alpha = 0.05,
                              name = "condition_infected_vs_ctrl")
+
+# FOXP4 gene query
 #sum(row.names(DESeq.all.result_HFA) == "ENSG00000137166")
+#DESeq.HFA@assays@data$counts[row.names(DESeq.all.result_HFA) == "ENSG00000137166", ]
 #DESeq.all.result_HFA[row.names(DESeq.all.result_HFA) == "ENSG00000137166",]
+
 DESeq.all.result_a <- results(DESeq.a, independentFiltering = TRUE, alpha = 0.05,
                              name = "condition_infected_vs_ctrl")
 #plotDispEsts(DESeq.all)
@@ -321,6 +325,8 @@ named_res.HFA%>%
   filter(order %in% c(1:10, (nrow(.)-9):nrow(.)))%>%
   mutate(order = factor(1:n()))->temp_HFA
 
+#DESeq.HFA@assays@data$counts[is.element(row.names(DESeq.HFA), unlist(temp_HFA$ensembl_gene_id)), ]
+
 temp_HFA%>%
   ggplot()+
   geom_bar(aes(order, log2FoldChange, fill = ifelse(log2FoldChange > 0, "> 0", "< 0")), stat = "identity")+
@@ -437,6 +443,7 @@ DESeq.FHA.result.sorted.gt2fc%>%
   dplyr::select(ens_gene, log2FoldChange) %>%
   inner_join(paper_res %>% dplyr::select(FoldChange_paper, ens_gene, ext_gene))%>%
   group_by(ens_gene)%>%summarise_all(mean)->com_df_gp
+
 Cor_1 = cor(com_df_gp$log2FoldChange, com_df_gp$FoldChange_paper) %>% round(3)
 Cor_label_1 = paste0("cor = ", Cor_1)
 
@@ -457,6 +464,46 @@ my_plot <- function(data, Cor_label = "", xt = "", yt="", tt = ""){
 p7 <- my_plot(com_df_gp, Cor_label = Cor_label_1, xt = "DESeq", yt="Paper result(Kallisto)", tt = "Fold Change of Commonly Detected DEgenes in Star-subread vs Kallisto")
 p7
 ```
+
+```{r, echo=F, eval=F}
+# top regulated genes paper's result
+paper_res%>%
+  filter(abs(FoldChange_paper) >= 2) %>%
+  arrange(desc(FoldChange_paper))%>%
+  mutate(order = 1:n()) %>%
+  filter(order %in% c(1:10, (nrow(.)-9):nrow(.)))%>%
+  mutate(order = factor(1:n()))->temp_paper
+
+temp_paper%>%
+  ggplot()+
+  geom_bar(aes(order, FoldChange_paper, fill = ifelse(FoldChange_paper > 0, "> 0", "< 0")), stat = "identity")+
+  scale_x_discrete(labels = temp_paper$ext_gene)+
+  labs(title = "HFA_Invected vs non-Infected", x = "Gene Name", y = "Log2 fold change", fill = "Log2FoldChange")+
+  coord_flip()+
+  theme_classic(base_size = 11)
+
+# unique my analysis
+DESeq.FHA.result.sorted.gt2fc%>%
+  data.frame()%>%
+  dplyr::select(ens_gene, log2FoldChange) %>%
+  anti_join(paper_res %>% dplyr::select(FoldChange_paper, ens_gene, ext_gene)) ->unique_here
+
+gene.vector <- is.element(row.names(DESeq.all.result), unlist(unique_here$ens_gene))
+sum(gene.vector)
+names(gene.vector) <- rownames(DESeq.all.result)
+gene.vector <- ifelse(is.na(gene.vector), 0, gene.vector)
+glen <- getlength(rownames(DESeq.all.result), "hg38","ensGene")
+gid <- rownames(DESeq.all.result)
+pwf <- nullp(gene.vector, id = gid, bias.data = glen)
+go.wall <- goseq(pwf,"hg38","ensGene", use_genes_without_cat=T)
+
+## needs update with result dataset
+go.gns <- getgo(unlist(query_gene), "hg38", "ensGene")%>%stack()
+idx <- p.adjust(go.wall$over_represented_pvalue,method="BH")<.05 | p.adjust(go.wall$under_represented_pvalue,method="BH")<.05
+go.wall <- go.wall[idx,]
+
+```
+
 
 _Figure.5_ Comparison of fold change of commonly detected DEgenes in Star-subread vs Kallisto.    
 
@@ -490,12 +537,7 @@ gene.vector <- ifelse(DESeq.all.result$padj < 0.05 & abs(DESeq.all.result$log2Fo
 #sum(gene.vector, na.rm = T)
 names(gene.vector) <- rownames(DESeq.all.result)
 gene.vector <- ifelse(is.na(gene.vector), 0, gene.vector)
-
-#glen <- rc0$Length
 glen <- getlength(rownames(DESeq.all.result), "hg38","ensGene")
-#sum(gene.vector)
-#length(glen)
-#length(gene.vector)
 gid <- rownames(rc0)
 pwf <- nullp(gene.vector, id = gid, bias.data = glen)
 go.wall <- goseq(pwf,"hg38","ensGene", use_genes_without_cat=T)
@@ -516,7 +558,7 @@ REVIGO_treemap(stuff)
 
 Pseudo-aligned with Kallisto default parameters to GRCh38.81 on transcriptomic level was done in the original paper. 722 transcripts were reported upregulated, while 81 transcripts were reported downregulated on average the of 3 donors, with ajdust-pvalue < 0.05 and greater than log2 fold change. The reported average log2 fold change of differentially expressed transcripts is 8.9. The reported differentially expressed transcripts are belong to 391 unique genes. In our analysis, alignment was performed with STAR followed by subread. 266 genes were upregulated, while 55 genes were downregulated with differential expression of more than 2 log2-fold and adjust-pvalue < 0.05. The average log2-fold change of DEGs is 3.5. STAR workflow might lack the power for detecting changes at transcript level, it gives more accurate inference of changes that affect the overall transcriptional output of the gene. Different workflow seems to give uniquely subset of result of differencially expressed genes. 134 genes are commonly detected (321 in our analysis, 391 in paper's result), the correlation of commonly detected genes' log2-fold change is 0.926.       
 
-OAS2 (encoded protein induced by interferons, results in viral RNA degradation and the inhibition of viral replication.) was mentioned in the paper as the most upregulated gene in response to ZIKV infection with more than 10 log2-fold change. In our analysis at gene level, OAS2 is also show as one of the top upregulated genes with more than 9 log2-fold change. RSAD2, CMPK2, MX1, MX2, and OASL (known for association to viral infection and immune response to IFN) were also consistently shown as top upregulated genes as in the original paper's result. However, FOXP4 gene (known involved in development of the central nervous system) was claimed to be mostly suppressed according to the original paper wasn’t shown as a significant result in our analysis.  Down regulated genes in our analysis includes TECTB, which has known association to Alzheimer Disease [7], and SFRP2, which is reported regulate midbrain dopamine neuron development [8]. A few of the most down regulated genes are lncRNA, their functional association might require further research.        
+OAS2 (encoded protein induced by interferons, results in viral RNA degradation and the inhibition of viral replication.) was mentioned in the paper as the most upregulated gene in response to ZIKV infection with more than 10 log2-fold change. In our analysis at gene level, OAS2 is also show as one of the top upregulated genes with more than 9 log2-fold change. RSAD2, CMPK2, MX1, MX2, and OASL (known for association to viral infection and immune response to IFN) were also consistently shown as top upregulated genes as in the original paper's result. However, FOXP4 gene (known involved in development of the central nervous system) was claimed to be mostly suppressed according to the original paper wasn’t shown as a significant result in our analysis.  Downregulated genes in our analysis includes TECTB, which has known association to Alzheimer Disease [7], and SFRP2, which is reported regulate midbrain dopamine neuron development [8]. A few of the most down regulated genes are lncRNA, their functional association might require further research.        
 
 Gene Ontology analysis of DEgenes in HFA after persistent ZIKV infection show that the top regulated genes are mostly associated with defense response to virus, response to cytokine, regulation of ribonuclease activity (*revigo_r/GO_result_DESeq2.xlsx*), the finding is consistent with the original paper's analysis. Compare to the original paper's observation of deregulation of genes that affect morphogenesis of epithelium, cell-substrate adherent junction assembly and focal adhesion assembly, our analysis at gene level only found association with response to external stimulus, and biological adhesion. However, gene Ontology analysis of genes associated with differeicial use of exon showed very similar result that associated genes are functionally related to anatomical structure morphogenesis, neuron system development, regulation of developmental process and biological adhesion. For example, ELP4, LPP, EPHA1, and KRT8 (know with association to Alzheimer Disease) are among the associated genes with most change in differential use of exon.           
 HFA and A549 showed different cell half-life under ZIKV infection, were also were sequenced with different depth. There might be not mentioned reasons that the original paper wasn't include the sequencing result of A549 in the analysis. But since the in-vitro assay observed moderate apoptosis and insufficient response to IFN treatment, it might be interesting to compare the HFA and A549 in the infected condition. The known batch effect (different sequencing depth) was accounted in effect of cell-type, as shown in the heatmap that infection condition is the secondary clustering feature (cell type is the main clustering feature). At gene level, HFA showed higher expression of genes that associated to response to cytokine, and protein metabolic process. Interestingly, analysis of differential use of exon showed higher presence of MAPK pathway associated genes (TRIM14, GBP2, GNAS, SIPA1L1, CACNA1C, and RPL4) in infected HFA compared to infected A549. MAPK pathway is known plays important role in regulation of cell proliferation and cell death. This might be correlated with the in-vitro observation that HFA showed moderate apoptosis and insufficient response to IFN treatment in persistent ZIKV infection.            
@@ -712,27 +754,6 @@ GO_result_DEXseq %>% filter(description == "developmental process")%$% unique(ex
 ![Dexseq_HFA_InfectedvsNorm](Graph/Dexseq_HFA_InfectedvsNorm.png){width=400px}
 ![Dexseq_Infected_HFAvsA549](Graph/Dexseq_Infected_HFAvsA549.png){width=400px}
 
-```{r, echo=F, message=F, warning=F, eval=F}
-paper_res <- readxl::read_xlsx("paper/Table S2, Proofreading Viruses, Nov16,2018.xlsx", sheet = 1, skip = 1)%>%
-  mutate(FoldChange_paper = b)%>%
-  filter(pVal < 0.05 & abs(FoldChange) >= 2)
-
-expand_eg%>% dplyr::select(g1:g9, log2fold_Infected_Ctrl)%>%gather(-log2fold_Infected_Ctrl, key = "gene", value = "ens_gene")%>%drop_na()%>%group_by(ens_gene)%>%summarise(log2FoldChange = mean(log2fold_Infected_Ctrl))%>%
-  inner_join(paper_res %>% dplyr::select(FoldChange_paper, ens_gene))%>%
-  group_by(ens_gene)%>%summarise_all(mean)->com_df_gp1
-Cor_2 = cor(com_df_gp1$log2FoldChange, com_df_gp1$FoldChange_paper) %>% round(3)
-Cor_label_2 = paste0("cor = ", Cor_2)
-#length(unique(com_df_gp1$ens_gene))
-expand_eg%>% dplyr::select(e1:e19, log2fold_Infected_Ctrl)%>%gather(-log2fold_Infected_Ctrl, key = "exon", value = "target_ID")%>%drop_na()%>%group_by(target_ID)%>%summarise(log2FoldChange = mean(log2fold_Infected_Ctrl))%>%
-  inner_join(paper_res %>% dplyr::select(FoldChange_paper, target_ID))->com_df_ep
-Cor_3 = cor(com_df_ep$log2FoldChange, com_df_ep$FoldChange_paper) %>% round(3)
-Cor_label_3 = paste0("cor = ", Cor_3)
-#length(unique(com_df_ep$target_ID))
-plot(com_df_ep$log2FoldChange, com_df_ep$FoldChange_paper)
-p8 <- my_plot(com_df_gp1, Cor_label = Cor_label_2, xt = "DEXseq", yt="Paper result(Kallisto)", tt = "Commonly detected DEgens fold change")
-p9 <- my_plot(com_df_ep, Cor_label = Cor_label_3, xt = "DEXseq", yt="Paper result(Kallisto)", tt = "Commonly detected DEtranscript fold change")
-ggpubr::ggarrange(p7, p8, p9, common.legend = F, legend = "bottom", nrow = 1)
-```
 
 
 ```{r}
